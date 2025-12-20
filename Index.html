@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Divisão de Medicina - HNRe</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <style>
+      :root {
+        --primary-color: #050F41;
+        --secondary-color: #C62828;
+        --background-color: #F5F5F5;
+        --card-bg: #FFFFFF;
+        --text-color: #333;
+        --font-head: 'Montserrat', sans-serif;
+        --font-body: 'Carlito', sans-serif;
+      }
+      body { font-family: var(--font-body); background: var(--background-color); padding: 20px; color: var(--text-color); margin: 0; }
+      
+      /* HEADER */
+      .header-box { background-color: var(--primary-color); color: #fff; padding: 15px 30px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+      .header-left { display: flex; align-items: center; }
+      .header-logo { height: 60px; width: auto; margin-right: 20px; }
+      .header-text p { font-family: var(--font-head); font-size: 24px; margin: 0; font-weight: 700; line-height: 1.2; }
+      .header-text h2 { font-family: var(--font-body); font-size: 16px; margin: 4px 0 0; opacity: 0.9; font-weight: 400; }
+      
+      .nav-group { display: flex; gap: 10px; align-items: center; }
+      .nav-btn { background: transparent; border: 1px solid rgba(255,255,255,0.5); color: white; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-family: var(--font-head); font-weight: bold; font-size: 14px; transition: 0.2s; text-transform: uppercase; display: flex; align-items: center; justify-content: center; }
+      .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.2); border-color: white; }
+      .icon-btn { padding: 8px 12px; }
+
+      .hidden { display: none !important; }
+      
+      /* ESTILOS COMUNS */
+      .page-title { font-family: var(--font-head); font-size: 26px; font-weight: 800; color: var(--primary-color); text-transform: uppercase; text-align: center; flex-grow: 1; }
+      
+      /* TÍTULO DINÂMICO */
+      .dynamic-section-title { 
+          font-family: var(--font-head); color: var(--secondary-color); text-align: center; 
+          margin: 0 0 20px 0; font-weight: 800; text-transform: uppercase; font-size: 1.8em; 
+          border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;
+      }
+
+      /* --- VIEW LISTA --- */
+      .filter-bar-lista { display: flex; gap: 30px; align-items: stretch; background: #E0E0E0; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+      .kpi-card { background: white; border-radius: 10px; padding: 15px 25px; min-width: 220px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+      #kpi-count { font-family: var(--font-head); font-size: 3.5em; font-weight: 800; color: var(--primary-color); line-height: 1; margin-bottom: 5px; }
+      #kpi-label { font-family: var(--font-head); font-size: 0.85em; font-weight: bold; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
+      .filter-wrapper-lista { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+      .filter-header-lista { font-family: var(--font-head); color: var(--primary-color); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+      .filter-grid-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end; }
+      .filter-grid-lista label { font-family: var(--font-head); font-size: 11px; font-weight: bold; color: var(--primary-color); display: block; margin-bottom: 4px; text-transform: uppercase; }
+      
+      /* --- VIEW SEMANAL & FÉRIAS --- */
+      .filter-bar { background: #E0E0E0; padding: 15px 30px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; min-height: 80px; }
+      .filter-container-right { display: flex; gap: 15px; align-items: center; justify-content: flex-end; min-width: 400px; }
+      .filter-mini-item { display: flex; flex-direction: column; width: 180px; }
+      .filter-mini-item label { font-family: var(--font-head); font-size: 10px; font-weight: bold; color: var(--primary-color); text-transform: uppercase; margin-bottom: 2px; }
+
+      /* --- DASHBOARD --- */
+      .dashboard-container { display: flex; flex-direction: column; gap: 20px; }
+      .dash-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+      .dash-kpi-card { background: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-bottom: 4px solid var(--primary-color); transition: transform 0.2s; }
+      .dash-kpi-card:hover { transform: translateY(-3px); }
+      .dash-kpi-value { font-family: var(--font-head); font-size: 2.5em; font-weight: 800; color: var(--primary-color); line-height: 1.1; }
+      .dash-kpi-label { font-family: var(--font-head); font-size: 0.75em; font-weight: bold; text-transform: uppercase; color: #666; margin-top: 5px; }
+      
+      .dash-charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      .chart-box { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; min-height: 350px; display: flex; flex-direction: column; }
+      .chart-title { font-family: var(--font-head); font-size: 16px; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+      .chart-content { flex-grow: 1; width: 100%; height: 300px; }
+
+      .clear-filter-btn { 
+          background-color: var(--secondary-color); color: white; border: none; padding: 8px 16px; 
+          border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 12px; display: none; margin: 0 auto 15px auto;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2); text-transform: uppercase; font-family: var(--font-head);
+      }
+      .clear-filter-btn:hover { background-color: #b71c1c; }
+
+      /* COMPONENTES GERAIS */
+      .switch-container { display: flex; align-items: center; gap: 10px; height: 38px; }
+      .switch { position: relative; display: inline-block; width: 46px; height: 22px; margin-bottom: 0; }
+      .switch input { opacity: 0; width: 0; height: 0; }
+      .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+      .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+      input:checked + .slider { background-color: var(--primary-color); }
+      input:focus + .slider { box-shadow: 0 0 1px var(--primary-color); }
+      input:checked + .slider:before { transform: translateX(24px); }
+      .switch-label { font-family: var(--font-head); font-size: 11px; font-weight: bold; color: var(--primary-color); text-transform: uppercase; }
+
+      .table-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+      table.dataTable { width: 100% !important; border-collapse: collapse !important; }
+      table.dataTable thead th { background-color: var(--primary-color) !important; color: #ffffff !important; font-family: var(--font-head); text-transform: uppercase; font-size: 16px; padding: 14px 10px; cursor: default !important; background-image: none !important; border-bottom: none !important; }
+      table.dataTable tbody td { padding: 14px 10px; font-size: 16px; vertical-align: top; border-bottom: 1px solid #eee; line-height: 1.5; cursor: pointer; }
+      table.dataTable tbody tr:hover { background-color: #f1f5f9 !important; }
+      .medico-sep { border-top: 1px dashed #ccc; margin: 8px 0 4px 0; width: 100%; opacity: 0.6; }
+
+      .weekly-grid { display: grid; gap: 1px; background-color: #ddd; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+      .grid-header, .grid-label, .grid-cell { background-color: white; padding: 10px; }
+      .grid-header { font-family: var(--font-head); font-weight: bold; color: var(--primary-color); text-align: center; text-transform: uppercase; display: flex; align-items: center; justify-content: center; }
+      .grid-label { font-family: var(--font-head); font-weight: bold; color: white; background-color: var(--primary-color); display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 1px; writing-mode: vertical-rl; transform: rotate(180deg); }
+      .cell-row-odd { background-color: #f9fafb !important; } 
+      .cell-row-even { background-color: #ffffff !important; } 
+      .grid-cell { min-height: 150px; display: flex; flex-direction: column; gap: 6px; }
+      
+      .doc-card { background: #f9f9f9; border: 1px solid #eee; border-left: 4px solid #ccc; padding: 8px; border-radius: 4px; font-size: 15px; line-height: 1.3; }
+      .doc-name { font-weight: bold; color: #333; display: block; }
+      .doc-detail { display: block; font-size: 11px; color: #555; margin-top: 3px; font-weight: 700; text-transform: uppercase; border-top: 1px solid #e0e0e0; padding-top: 3px; line-height: 1.2; }
+      .doc-card.border-vermelho { border-left-color: #c62828; } 
+      .doc-card.border-amarelo { border-left-color: #FBC02D; } 
+      .doc-card.border-verde { border-left-color: #2E7D32; } 
+      .doc-card.border-cinza { border-left-color: #9e9e9e; } 
+      .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.85em; margin: 3px; border: 1px solid #ccc; font-weight: bold; white-space: nowrap; }
+      .chip-group { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 2px; align-items: center; }
+      .bg-amarelo { background-color: #FFF9C4; color: #BF360C; border-color: #FBC02D; }
+      .bg-vermelho { background-color: #ffebee; color: #c62828; border-color: #ef9a9a; }
+      .bg-verde { background-color: #E8F5E9; color: #1B5E20; border-color: #C8E6C9; } 
+      .bg-cinza { background-color: #f5f5f5; color: #616161; border-color: #e0e0e0; }
+      .bg-default { background-color: #eceff1; color: #455a64; border-color: #cfd8dc; }
+      .bg-seg { background-color: #e1f5fe; color: #0277bd; border-color: #81d4fa; }
+      .bg-ter { background-color: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+      .bg-qua { background-color: #fff3e0; color: #ef6c00; border-color: #ffcc80; }
+      .bg-qui { background-color: #f3e5f5; color: #7b1fa2; border-color: #ce93d8; }
+      .bg-sex { background-color: #ffebee; color: #c62828; border-color: #ef9a9a; }
+      .bg-sab { background-color: #fafafa; color: #616161; border-color: #bdbdbd; }
+      .ch-cell { font-weight: 700; color: var(--primary-color); font-size: 1.1em; text-align: center; padding: 5px; }
+      .ch-warning { background-color: #ffebee; color: #b71c1c !important; border: 1px solid #ffcdd2; border-radius: 4px; }
+
+      #timeline-chart { width: 100%; min-height: 600px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; margin-top: 20px; }
+      .google-visualization-tooltip { border-radius: 8px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important; border: none !important; font-family: 'Carlito', sans-serif !important; }
+      .tooltip-box { padding: 10px; min-width: 180px; }
+      .tooltip-title { font-weight: bold; color: var(--primary-color); margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 3px; font-size: 14px; }
+      .tooltip-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px; }
+      .tooltip-label { font-weight: bold; color: #666; margin-right: 10px; }
+
+      /* MODAL - AJUSTES */
+      .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 1000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+      .modal-overlay.active { opacity: 1; }
+      .modal-box { background: #fff; width: 95%; max-width: 600px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: translateY(20px); transition: transform 0.3s ease; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; }
+      .modal-overlay.active .modal-box { transform: translateY(0); }
+      .modal-header { background-color: var(--primary-color); color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: flex-start; }
+      .modal-header-content { display: flex; gap: 20px; align-items: flex-start; width: 100%; }
+      .doc-photo-container { width: 140px; height: 140px; border-radius: 12px; overflow: hidden; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex-shrink: 0; background: #fff; }
+      .doc-photo { width: 100%; height: 100%; object-fit: cover; }
+      .modal-header-info { display: flex; flex-direction: column; justify-content: center; padding-top: 5px; flex-grow: 1; }
+      .modal-title h2 { margin: 0; font-family: var(--font-head); font-size: 22px; font-weight: 700; line-height: 1.2; text-transform: uppercase; }
+      .modal-subtitle { margin: 5px 0 0; opacity: 0.9; font-size: 14px; font-family: var(--font-body); font-weight: 400; text-transform: uppercase; }
+      .header-stacked-info { margin-top: 12px; display: flex; flex-direction: column; gap: 4px; }
+      .spec-line { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; text-transform: uppercase; display: block; }
+      .resident-highlight { color: #FFD740 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+      .contact-combined-line { font-family: var(--font-body); font-size: 13px; opacity: 0.9; display: flex; align-items: center; gap: 10px; color: #fff; flex-wrap: wrap; }
+      .contact-item { display: flex; align-items: center; gap: 4px; }
+      .contact-item span.material-symbols-outlined { font-size: 16px; }
+      .contact-sep { opacity: 0.5; font-size: 14px; }
+      .btn-close-modal { background: transparent; border: none; color: white; font-size: 32px; cursor: pointer; line-height: 1; padding: 0; margin-left: 20px; align-self: flex-start; }
+      .modal-content { padding: 25px; overflow-y: auto; font-family: var(--font-body); }
+      .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; } 
+      .info-item { background: #f9f9f9; padding: 8px; border-radius: 6px; border: 1px solid #eee; }
+      .info-item label { display: block; font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; margin-bottom: 3px; }
+      .info-item div { font-size: 14px; color: #333; font-weight: 500; word-break: break-word; }
+      .info-full { grid-column: 1 / -1; }
+      .modal-section-title { border-bottom: 2px solid #eee; color: var(--primary-color); font-family: var(--font-head); font-weight: bold; font-size: 15px; padding-bottom: 5px; margin: 15px 0 10px 0; text-transform: uppercase; }
+      .mini-schedule { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ddd; }
+      .mini-schedule th { background-color: #f0f4f8; padding: 2px; text-align: center; font-size: 10px; font-weight: bold; color: #555; border: 1px solid #ddd; text-transform: uppercase; width: 12%; }
+      .mini-schedule td { border: 1px solid #ddd; padding: 2px; text-align: center; font-size: 9px; color: #333; height: 25px; }
+      .mini-schedule .day-label { font-weight: bold; background-color: #fafafa; font-size: 9px; }
+      .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #eee; margin: 0 auto; }
+      .status-dot.active { background-color: #2E7D32; border: 1px solid #1B5E20; box-shadow: 0 0 2px rgba(46,125,50,0.5); }
+      .status-dot.active-spa { background-color: #c62828; border: 1px solid #b71c1c; box-shadow: 0 0 2px rgba(198,40,40,0.5); }
+
+      @media (max-width: 800px) { 
+          .filter-bar, .filter-bar-lista { flex-direction: column; align-items: stretch; } 
+          .filter-container-right { justify-content: space-between; min-width: auto; margin-top: 10px; }
+          .kpi-card { margin-bottom: 15px; min-width: auto; } 
+          .modal-header-content { flex-direction: column; align-items: center; text-align: center; } 
+          .header-stacked-info { align-items: center; } 
+          .contact-combined-line { justify-content: center; } 
+          .dash-charts-grid { grid-template-columns: 1fr; }
+      }
+
+      #loader { text-align: center; padding: 40px; color: var(--primary-color); }
+      .error-msg { background: #ffebee; color: #b71c1c; padding: 15px; border-radius: 8px; display: none; text-align: center; font-weight: bold; margin-bottom:20px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-box">
+        <div class="header-left">
+            <img src="https://i.imgur.com/KUbQz08.png" alt="Logo HNRe" class="header-logo">
+            <div class="header-text">
+                <p>DIVISÃO DE MEDICINA</p>
+                <h2>HOSPITAL NAVAL DE RECIFE</h2>
+            </div>
+        </div>
+        <div class="nav-group">
+            <button id="btn-lista" class="nav-btn active" onclick="switchView('lista')">Lista</button>
+            <button id="btn-semanal" class="nav-btn" onclick="switchView('semanal')">Semanal</button>
+            <button id="btn-ferias" class="nav-btn" onclick="switchView('ferias')">Férias</button>
+            <button id="btn-dash" class="nav-btn icon-btn" onclick="switchView('dashboard')" title="Dashboard"><span class="material-symbols-outlined">dashboard</span></button>
+        </div>
+    </div>
+
+    <div id="error-display" class="error-msg"></div>
+
+    <div id="loader">
+        <span class="material-symbols-outlined" style="font-size: 48px; animation: spin 1s infinite linear;">sync</span>
+        <h3>Carregando dados...</h3>
+    </div>
+
+    <div id="view-lista">
+        <div class="filter-bar-lista">
+            <div class="kpi-card">
+                <div id="kpi-count">-</div>
+                <div id="kpi-label">TOTAL DE MÉDICOS</div>
+            </div>
+            <div class="filter-wrapper-lista">
+                <div class="filter-header-lista"><span class="material-symbols-outlined">filter_list</span> FILTROS</div>
+                <div class="filter-grid-lista">
+                    <div class="filter-item"><label>Corpo</label><select id="f-corpo" style="width:100%"><option></option></select></div>
+                    <div class="filter-item"><label>Setores</label><select id="f-setores" style="width:100%"><option></option></select></div>
+                    <div class="filter-item"><label>Especialidade</label><select id="f-esp" style="width:100%"><option></option></select></div>
+                    <div class="filter-item">
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input type="checkbox" id="f-res-switch">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="switch-label">Residentes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="table-card">
+            <table id="medicosTable" class="display">
+                <thead>
+                    <tr><th>Ant</th><th>Médico</th><th>Funções</th><th>Horários</th><th>SPA fixo</th><th>CH</th><th>_Corpo</th><th>_Residente</th></tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <div id="view-semanal" class="hidden">
+        <div class="filter-bar">
+            <div class="page-title">DETALHE SEMANAL</div>
+            <div class="filter-container-right">
+                <div class="filter-mini-item"><label>Corpo</label><select id="w-corpo" style="width:100%"><option></option></select></div>
+                <div class="filter-mini-item"><label>Setores</label><select id="w-setores" style="width:100%"><option></option></select></div>
+                <div class="filter-mini-item"><label>Especialidade</label><select id="w-esp" style="width:100%"><option></option></select></div>
+            </div>
+        </div>
+        
+        <h2 id="dynamic-weekly-title" class="dynamic-section-title">DIVISÃO DE MEDICINA</h2>
+        
+        <div id="grid-container" class="weekly-grid"></div>
+    </div>
+
+    <div id="view-ferias" class="hidden">
+        <div class="filter-bar">
+            <div class="page-title">PROGRAMAÇÃO DE FÉRIAS 2026</div>
+            <div class="filter-container-right">
+                <div class="filter-mini-item"><label>Corpo</label><select id="fer-corpo" style="width:100%"><option></option></select></div>
+                <div class="filter-mini-item"><label>Setor</label><select id="fer-setor" style="width:100%"><option></option></select></div>
+            </div>
+        </div>
+        <div id="timeline-chart"></div>
+    </div>
+
+    <div id="view-dashboard" class="hidden">
+        <div class="dashboard-container">
+            <div style="text-align: center;">
+                <button id="btn-clear-dash" class="clear-filter-btn" onclick="clearDashboardFilters()">
+                    <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">filter_alt_off</span> 
+                    LIMPAR FILTROS
+                </button>
+            </div>
+
+            <div class="dash-kpi-grid">
+                <div class="dash-kpi-card"><div class="dash-kpi-value" id="kpi-total">0</div><div class="dash-kpi-label">TOTAL MÉDICOS</div></div>
+                <div class="dash-kpi-card"><div class="dash-kpi-value" id="kpi-especialistas">0</div><div class="dash-kpi-label">ESPECIALISTAS</div></div>
+                <div class="dash-kpi-card"><div class="dash-kpi-value" id="kpi-generalistas">0</div><div class="dash-kpi-label">GENERALISTAS</div></div>
+                <div class="dash-kpi-card"><div class="dash-kpi-value" id="kpi-residentes">0</div><div class="dash-kpi-label">RESIDENTES</div></div>
+                <div class="dash-kpi-card"><div class="dash-kpi-value" id="kpi-ch">0</div><div class="dash-kpi-label">CH TOTAL</div></div>
+                <div class="dash-kpi-card"><div class="dash-kpi-value" id="kpi-idade">0</div><div class="dash-kpi-label">MÉDIA IDADE</div></div>
+            </div>
+
+            <div class="dash-charts-grid">
+                <div class="chart-box">
+                    <div class="chart-title">ESPECIALIDADES (Apenas Especialistas)</div>
+                    <div id="chart-especialidades" class="chart-content"></div>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">DISTRIBUIÇÃO POR CORPO</div>
+                    <div id="chart-corpo" class="chart-content"></div>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">DISTRIBUIÇÃO POR SETOR</div>
+                    <div id="chart-setores" class="chart-content"></div>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">VÍNCULO (RESIDENTES VS OFICIAIS)</div>
+                    <div id="chart-vinculo" class="chart-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="medicoModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-header-content">
+                    <div class="doc-photo-container"><img id="modal-img" class="doc-photo" src="" alt="Foto"></div>
+                    <div class="modal-header-info">
+                        <div class="modal-title"><h2 id="modal-nome">Nome</h2><p class="modal-subtitle" id="modal-sub"></p></div>
+                        <div class="header-stacked-info">
+                            <div id="modal-spec-display" class="spec-line"></div>
+                            <div class="contact-combined-line">
+                                <span id="box-email" class="contact-item"><span class="material-symbols-outlined">mail</span> <span id="modal-email">-</span></span>
+                                <span id="contact-sep" class="contact-sep">|</span>
+                                <span id="box-cel" class="contact-item"><span class="material-symbols-outlined">call</span> <span id="modal-cel">-</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="modal-section-title" style="margin-top:0">Dados Pessoais</div>
+                <div class="info-grid">
+                    <div class="info-item" id="box-nip"><label>NIP</label><div id="modal-nip">-</div></div>
+                    <div class="info-item" id="box-cpf"><label>CPF</label><div id="modal-cpf">-</div></div>
+                    <div class="info-item" id="box-nasc"><label>Nascimento</label><div id="modal-nasc">-</div></div>
+                    <div class="info-item" id="box-rg"><label>Identidade</label><div id="modal-rg">-</div></div>
+                </div>
+
+                <div class="modal-section-title">Dados Profissionais</div>
+                <div class="info-grid">
+                    <div class="info-item" id="box-crm"><label>CRM-PE</label><div id="modal-crm">-</div></div>
+                    <div class="info-item" id="box-rqe"><label>RQE</label><div id="modal-rqe">-</div></div>
+                    <div class="info-item" id="box-inc"><label>Incorporação</label><div id="modal-inc">-</div></div>
+                </div>
+                
+                <div class="modal-section-title">HORÁRIOS</div>
+                <div class="info-item info-full" style="background:white; border:none; padding:0;">
+                    <table class="mini-schedule" id="modal-schedule-table">
+                        <thead><tr><th></th><th>D</th><th>S</th><th>T</th><th>Q</th><th>Q</th><th>S</th><th>S</th></tr></thead>
+                        <tbody>
+                            <tr><td class="day-label">MANHÃ</td><td id="sh-dom-manha"><span class="status-dot"></span></td><td id="sh-seg-manha"><span class="status-dot"></span></td><td id="sh-ter-manha"><span class="status-dot"></span></td><td id="sh-qua-manha"><span class="status-dot"></span></td><td id="sh-qui-manha"><span class="status-dot"></span></td><td id="sh-sex-manha"><span class="status-dot"></span></td><td id="sh-sab-manha"><span class="status-dot"></span></td></tr>
+                            <tr><td class="day-label">TARDE</td><td id="sh-dom-tarde"><span class="status-dot"></span></td><td id="sh-seg-tarde"><span class="status-dot"></span></td><td id="sh-ter-tarde"><span class="status-dot"></span></td><td id="sh-qua-tarde"><span class="status-dot"></span></td><td id="sh-qui-tarde"><span class="status-dot"></span></td><td id="sh-sex-tarde"><span class="status-dot"></span></td><td id="sh-sab-tarde"><span class="status-dot"></span></td></tr>
+                            <tr><td class="day-label" style="background-color:#263238; color:white;">NOITE</td><td id="sh-dom-noite"><span class="status-dot"></span></td><td id="sh-seg-noite"><span class="status-dot"></span></td><td id="sh-ter-noite"><span class="status-dot"></span></td><td id="sh-qua-noite"><span class="status-dot"></span></td><td id="sh-qui-noite"><span class="status-dot"></span></td><td id="sh-sex-noite"><span class="status-dot"></span></td><td id="sh-sab-noite"><span class="status-dot"></span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top:20px; text-align:right;">
+                    <span style="font-size:12px; font-weight:bold; color:#777;">CARGA HORÁRIA TOTAL:</span>
+                    <span id="modal-ch" style="font-size:18px; font-weight:bold; color:var(--primary-color); margin-left:5px;">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      let globalData = []; let globalFeriasData = []; let currentView = 'lista'; let dataTableInstance = null; let isSPAMode = false;
+      const IGNORED_SPECIALTIES = ['Anestesiologia', 'Cirurgia Cardiovascular', 'Clínica Médica', 'Generalista'];
+      let chartLibReady = false;
+      let doctorAntMap = {};
+      let currentDashFilter = null; 
+
+      $.fn.dataTable.ext.search = []; 
+      $.fn.dataTable.ext.search.push(function(settings, searchData, index, rowData, counter) {
+          if (settings.nTable.id !== 'medicosTable') return true;
+          const data = settings.aoData[index]._aData; if (!data) return true;
+          const selCorpo = $('#f-corpo').val(), selSetores = $('#f-setores').val(), selEsp = $('#f-esp').val(), isResidenteOnly = $('#f-res-switch').is(':checked');
+          if (selCorpo && selCorpo !== "" && data.Corpo !== selCorpo) return false;
+          if (selEsp && selEsp !== "" && data.Especialidade !== selEsp) return false;
+          if (isResidenteOnly && data.Residente !== 'Sim') return false;
+          if (selSetores && selSetores !== "") { const medSetores = (data.Setores || '').split(/,|\n/).map(s => s.trim()); if (!medSetores.includes(selSetores)) return false; }
+          return true;
+      });
+
+      google.charts.load('current', {'packages':['timeline', 'corechart'], 'language': 'pt'});
+      google.charts.setOnLoadCallback(() => { chartLibReady = true; if (currentView === 'ferias') drawFeriasChart(); if (currentView === 'dashboard') updateDashboard(); });
+
+      $(document).ready(function() {
+          $('.filter-item select, .filter-mini-item select').select2({ placeholder: "Todos", allowClear: true });
+          
+          $('#f-corpo, #f-setores, #f-esp').on('change select2:select select2:unselect', function () { if(dataTableInstance) { dataTableInstance.draw(); updateKPI(); } });
+          $('#f-res-switch').on('change', function() { if(dataTableInstance) { dataTableInstance.draw(); updateKPI(); } });
+          
+          // FILTROS FÉRIAS
+          $('#fer-corpo, #fer-setor').on('change', drawFeriasChart);
+          $(window).resize(function() { 
+              if(currentView === 'ferias') drawFeriasChart(); 
+              if(currentView === 'dashboard') updateDashboard(currentDashFilter);
+          });
+
+          // FILTROS SEMANAIS (TÍTULO DINAMICO)
+          $('#w-setores').on('change', function(e) { 
+              const val = $(this).val(); 
+              updateWeeklyTitle(val); 
+              if (val === 'SPA') { 
+                  isSPAMode = true; $('#w-corpo').val(null).trigger('change.select2'); $('#w-esp').val(null).trigger('change.select2'); 
+              } else { if(isSPAMode) { isSPAMode = false; } } 
+              renderWeeklyGrid(); 
+          });
+          $('#w-corpo, #w-esp').on('change', function() { 
+              const val = $(this).val(); 
+              if (isSPAMode && val) { isSPAMode = false; $('#w-setores').val(null).trigger('change.select2'); updateWeeklyTitle(null); } 
+              renderWeeklyGrid(); 
+          });
+
+          google.script.run.withSuccessHandler(onDataLoaded).withFailureHandler(handleError).getMedicosData();
+          google.script.run.withSuccessHandler(onFeriasLoaded).withFailureHandler(console.error).getFeriasData();
+
+          $('#medicoModal').on('click', function(e) { if (e.target === this) closeModal(); });
+      });
+
+      function onDataLoaded(data) {
+          $('#loader').addClass('hidden');
+          if (!data || data.length === 0) { handleError({ message: "Sem dados." }); return; }
+          globalData = data;
+          globalData.forEach(d => { doctorAntMap[d.Medico] = d.Ant; });
+          initListView(); populateWeeklyFilters();
+          if (currentView === 'dashboard') updateDashboard();
+      }
+      function onFeriasLoaded(data) { globalFeriasData = data; populateFeriasFilters(); }
+
+      function switchView(viewName) {
+          $('.nav-btn').removeClass('active'); $('#view-lista, #view-semanal, #view-ferias, #view-dashboard').addClass('hidden'); currentView = viewName;
+          if (viewName === 'lista') { $('#view-lista').removeClass('hidden'); $('#btn-lista').addClass('active'); } 
+          else if (viewName === 'semanal') { $('#view-semanal').removeClass('hidden'); $('#btn-semanal').addClass('active'); renderWeeklyGrid(); } 
+          else if (viewName === 'ferias') { $('#view-ferias').removeClass('hidden'); $('#btn-ferias').addClass('active'); drawFeriasChart(); }
+          else if (viewName === 'dashboard') { $('#view-dashboard').removeClass('hidden'); $('#btn-dash').addClass('active'); updateDashboard(currentDashFilter); }
+      }
+
+      // --- LOGICA DO DASHBOARD ---
+      function isSpecialist(doc) {
+          if (doc.Medico && doc.Medico.includes('JÚLIO CÉSAR')) return true; 
+          return doc.Especialidade !== 'Generalista' && doc.Residente !== 'Sim';
+      }
+
+      function clearDashboardFilters() {
+          currentDashFilter = null;
+          updateDashboard();
+      }
+
+      function updateDashboard(filter = null) {
+          if (!chartLibReady || !globalData || globalData.length === 0) return;
+          
+          currentDashFilter = filter;
+          if (filter) $('#btn-clear-dash').show(); else $('#btn-clear-dash').hide();
+
+          // 1. Filtrar Dados
+          let dashData = globalData.filter(d => {
+              if (!filter) return true;
+              if (filter.type === 'Corpo' && d.Corpo !== filter.value) return false;
+              if (filter.type === 'Especialidade' && d.Especialidade !== filter.value) return false;
+              if (filter.type === 'Setor') {
+                  const s = (d.Setores || '').split(/,|\n/).map(x=>x.trim());
+                  if (!s.includes(filter.value)) return false;
+              }
+              if (filter.type === 'Vinculo') {
+                  if (filter.value === 'Residentes' && d.Residente !== 'Sim') return false;
+                  if (filter.value === 'Oficiais' && d.Residente === 'Sim') return false;
+              }
+              return true;
+          });
+
+          // 2. Calcular KPIs
+          const total = dashData.length;
+          const especialistas = dashData.filter(d => isSpecialist(d)).length;
+          const generalistas = dashData.filter(d => d.Especialidade === 'Generalista').length;
+          const residentes = dashData.filter(d => d.Residente === 'Sim').length;
+          const totalCH = dashData.reduce((sum, d) => sum + (parseInt(d.CH)||0), 0);
+          
+          // Média Idade
+          let ageSum = 0; let ageCount = 0;
+          dashData.forEach(d => {
+              if (d.Idade) {
+                  const match = d.Idade.match(/\d+/);
+                  if (match) { ageSum += parseInt(match[0]); ageCount++; }
+              }
+          });
+          const avgAge = ageCount > 0 ? Math.round(ageSum / ageCount) : 0;
+
+          // Atualizar DOM KPIs
+          $('#kpi-total').text(total);
+          $('#kpi-especialistas').text(especialistas);
+          $('#kpi-generalistas').text(generalistas);
+          $('#kpi-residentes').text(residentes);
+          $('#kpi-ch').text(totalCH);
+          $('#kpi-idade').text(avgAge > 0 ? avgAge : '-');
+
+          // 3. Gerar Gráficos
+          drawSpecChart(dashData);
+          drawCorpoChart(dashData);
+          drawSetorChart(dashData);
+          drawVinculoChart(dashData);
+      }
+
+      function drawSpecChart(data) {
+          const specMap = {};
+          data.forEach(d => {
+              if (isSpecialist(d)) {
+                  const s = d.Especialidade;
+                  specMap[s] = (specMap[s] || 0) + 1;
+              }
+          });
+          const dt = new google.visualization.DataTable();
+          dt.addColumn('string', 'Especialidade');
+          dt.addColumn('number', 'Qtd');
+          const rows = Object.entries(specMap).map(([k,v])=>[k,v]);
+          rows.sort((a,b) => b[1] - a[1]); // Descending
+          dt.addRows(rows);
+
+          const chart = new google.visualization.BarChart(document.getElementById('chart-especialidades'));
+          chart.draw(dt, { legend: { position: 'none' }, colors: ['#050F41'], chartArea: {width:'70%', height:'80%'} });
+          
+          google.visualization.events.addListener(chart, 'select', () => {
+              const sel = chart.getSelection();
+              if (sel.length) {
+                  const val = dt.getValue(sel[0].row, 0);
+                  updateDashboard({ type: 'Especialidade', value: val });
+              }
+          });
+      }
+
+      function drawCorpoChart(data) {
+          const map = { 'CSM':0, 'SMV':0, 'SMO':0 };
+          data.forEach(d => { if(map[d.Corpo] !== undefined) map[d.Corpo]++; });
+          const dt = new google.visualization.DataTable();
+          dt.addColumn('string', 'Corpo');
+          dt.addColumn('number', 'Qtd');
+          dt.addRows([['CSM', map.CSM], ['SMV', map.SMV], ['SMO', map.SMO]]);
+
+          const chart = new google.visualization.PieChart(document.getElementById('chart-corpo'));
+          chart.draw(dt, { pieHole: 0.4, colors: ['#c62828', '#FBC02D', '#2E7D32'], chartArea: {width:'90%', height:'80%'} });
+
+          google.visualization.events.addListener(chart, 'select', () => {
+              const sel = chart.getSelection();
+              if (sel.length) {
+                  const val = dt.getValue(sel[0].row, 0);
+                  updateDashboard({ type: 'Corpo', value: val });
+              }
+          });
+      }
+
+      function drawSetorChart(data) {
+          const map = {};
+          data.forEach(d => {
+              if (d.Setores) {
+                  const list = d.Setores.split(/,|\n/);
+                  list.forEach(s => {
+                      const st = s.trim();
+                      if (st && st !== 'Ambulatório' && st !== 'Cirurgias') {
+                          map[st] = (map[st] || 0) + 1;
+                      }
+                  });
+              }
+          });
+          const dt = new google.visualization.DataTable();
+          dt.addColumn('string', 'Setor');
+          dt.addColumn('number', 'Qtd');
+          const rows = Object.entries(map).map(([k,v])=>[k,v]);
+          rows.sort((a,b) => b[1] - a[1]);
+          dt.addRows(rows);
+
+          const chart = new google.visualization.ColumnChart(document.getElementById('chart-setores'));
+          chart.draw(dt, { legend: { position: 'none' }, colors: ['#050F41'], chartArea: {width:'80%', height:'70%'} });
+
+          google.visualization.events.addListener(chart, 'select', () => {
+              const sel = chart.getSelection();
+              if (sel.length) {
+                  const val = dt.getValue(sel[0].row, 0);
+                  updateDashboard({ type: 'Setor', value: val });
+              }
+          });
+      }
+
+      function drawVinculoChart(data) {
+          let res = 0; let ofi = 0;
+          data.forEach(d => { if(d.Residente==='Sim') res++; else ofi++; });
+          const dt = new google.visualization.DataTable();
+          dt.addColumn('string', 'Vínculo');
+          dt.addColumn('number', 'Qtd');
+          dt.addRows([['Oficiais/Staff', ofi], ['Residentes', res]]);
+
+          const chart = new google.visualization.PieChart(document.getElementById('chart-vinculo'));
+          chart.draw(dt, { pieHole: 0.4, colors: ['#050F41', '#FFD740'], chartArea: {width:'90%', height:'80%'} });
+
+          google.visualization.events.addListener(chart, 'select', () => {
+              const sel = chart.getSelection();
+              if (sel.length) {
+                  const val = dt.getValue(sel[0].row, 0);
+                  const filterVal = (val === 'Residentes') ? 'Residentes' : 'Oficiais';
+                  updateDashboard({ type: 'Vinculo', value: filterVal });
+              }
+          });
+      }
+
+      // --- TÍTULOS DINÂMICOS (SEMANAL) ---
+      function updateWeeklyTitle(setor) {
+          const titles = {
+              'JRS': 'Junta Regular de Saúde',
+              'SIAD': 'Serviço Integrado de Atendimento Domiciliar',
+              'NAIM': 'Núcleo de Atendimento ao Idoso na Marinha',
+              'SMI': 'Serviço de Medicina Integral',
+              'Guias': 'Seção de Guias',
+              'Regulação': 'Divisão de Regulação',
+              'Auditoria': 'Serviço de Auditoria',
+              'SPA': 'ESCALA SPA (Apenas plantões fixos)' // SPA Mantido como solicitado
+          };
+          
+          if (setor && titles[setor]) {
+              $('#dynamic-weekly-title').text(titles[setor]);
+          } else if (setor) {
+              // Se não estiver na lista especial, usa o nome do setor
+              $('#dynamic-weekly-title').text(setor.toUpperCase());
+          } else {
+              $('#dynamic-weekly-title').text('DIVISÃO DE MEDICINA');
+          }
+      }
+
+      function populateFeriasFilters() {
+          const corpos = new Set(); const setores = new Set();
+          globalFeriasData.forEach(item => { if (item.Corpo) corpos.add(item.Corpo); if (item.Setor) setores.add(item.Setor); });
+          fillSelect('#fer-corpo', corpos); fillSelect('#fer-setor', setores);
+          $('#fer-corpo, #fer-setor').select2({ placeholder: "Todos", allowClear: true });
+      }
+
+      function getHexColorForSetor(setor) {
+          const colors = { 'SPA': '#43A047', 'JRS': '#D32F2F', 'Ambulatório': '#FBC02D', 'Enfermaria': '#FBC02D', 'Cirurgias': '#FBC02D', 'Radiologia': '#FBC02D', 'Auditoria': '#D32F2F', 'CAAPIOSE': '#D32F2F', 'NAIM': '#FBC02D' };
+          return colors[setor] || '#1976D2'; 
+      }
+
+      function shortenName(name) { return name.replace(/\s*\(.*?\)\s*/g, ' ').trim(); }
+
+      function createCustomTooltip(name, setor, d1, d2) {
+          const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
+          const s1 = d1.toLocaleDateString('pt-BR', dateOpts);
+          const s2 = d2.toLocaleDateString('pt-BR', dateOpts);
+          return `<div class="tooltip-box"><div class="tooltip-title">${name}</div><div class="tooltip-row"><span class="tooltip-label">Setor:</span> ${setor}</div><div class="tooltip-row"><span class="tooltip-label">Início:</span> ${s1}</div><div class="tooltip-row"><span class="tooltip-label">Fim:</span> ${s2}</div></div>`;
+      }
+
+      function drawFeriasChart() {
+          if (!chartLibReady || !globalFeriasData || globalFeriasData.length === 0) return;
+          
+          const container = document.getElementById('timeline-chart');
+          const chart = new google.visualization.Timeline(container);
+          const dataTable = new google.visualization.DataTable();
+
+          dataTable.addColumn({ type: 'string', id: 'Médico' }); 
+          dataTable.addColumn({ type: 'string', id: 'Info' });   
+          dataTable.addColumn({ type: 'string', role: 'style' }); 
+          dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true} });
+          dataTable.addColumn({ type: 'date', id: 'Start' });
+          dataTable.addColumn({ type: 'date', id: 'End' });
+
+          const fCorpo = $('#fer-corpo').val(), fSetor = $('#fer-setor').val();
+          let filteredRows = globalFeriasData.filter(item => {
+              if (fCorpo && item.Corpo !== fCorpo) return false;
+              if (fSetor && item.Setor !== fSetor) return false;
+              return true;
+          });
+
+          if (filteredRows.length === 0) { container.innerHTML = '<div style="text-align:center; padding:50px;">Nenhum registro encontrado.</div>'; return; }
+
+          const order = { 'CSM': 1, 'SMV': 2, 'SMO': 3 };
+          filteredRows.sort((a, b) => {
+              const diffCorpo = (order[a.Corpo] || 99) - (order[b.Corpo] || 99);
+              if(diffCorpo !== 0) return diffCorpo;
+              const antA = doctorAntMap[a.Medico] || 9999;
+              const antB = doctorAntMap[b.Medico] || 9999;
+              return antA - antB; 
+          });
+
+          const rows = [];
+          const uniqueDoctors = new Set();
+          let currentYear = new Date().getFullYear();
+
+          filteredRows.forEach(item => {
+              const d1 = parseDate(item.Inicio), d2 = parseDate(item.Termino);
+              if (d1 && d2) {
+                  currentYear = d1.getFullYear();
+                  const nameShort = shortenName(item.Medico);
+                  const color = `color: ${getHexColorForSetor(item.Setor)};`; 
+                  const tooltip = createCustomTooltip(nameShort, item.Setor, d1, d2);
+                  rows.push([nameShort, '', color, tooltip, d1, d2]);
+                  uniqueDoctors.add(nameShort);
+              }
+          });
+
+          if (rows.length === 0) return;
+          dataTable.addRows(rows);
+
+          const rowHeight = 45;
+          const chartHeight = Math.max(500, uniqueDoctors.size * rowHeight + 50);
+
+          const options = {
+              height: chartHeight,
+              timeline: { 
+                  rowLabelStyle: { fontName: 'Montserrat', fontSize: 12, color: '#333' }, 
+                  barLabelStyle: { fontName: 'Carlito', fontSize: 10 },
+                  groupByRowLabel: true 
+              },
+              tooltip: { isHtml: true }, 
+              hAxis: { format: 'MMMM', minValue: new Date(currentYear, 0, 1), maxValue: new Date(currentYear, 11, 31) }
+          };
+          chart.draw(dataTable, options);
+      }
+
+      function parseDate(dateStr) { if(!dateStr) return null; const parts = dateStr.split('/'); if(parts.length !== 3) return null; return new Date(parts[2], parts[1]-1, parts[0]); }
+      function handleError(err) { $('#loader').addClass('hidden'); $('#error-display').text("ERRO: " + err.message).show(); }
+      function initListView() {
+          const sets = { corpo: new Set(), esp: new Set(), sector: new Set() };
+          globalData.forEach(r => { if(r.Corpo) sets.corpo.add(r.Corpo); if(r.Especialidade && !IGNORED_SPECIALTIES.includes(r.Especialidade)) sets.esp.add(r.Especialidade); if(r.Setores) r.Setores.split(/,|\n/).forEach(s => sets.sector.add(s.trim())); });
+          if ($('#f-corpo').data('select2')) $('#f-corpo').select2('destroy'); if ($('#f-esp').data('select2')) $('#f-esp').select2('destroy'); if ($('#f-setores').data('select2')) $('#f-setores').select2('destroy');
+          $('#f-corpo, #f-esp, #f-setores').empty().append('<option></option>'); fillSelect('#f-corpo', sets.corpo); fillSelect('#f-esp', sets.esp); fillSelect('#f-setores', sets.sector);
+          $('#f-corpo, #f-esp, #f-setores').select2({ placeholder: "Todos", allowClear: true });
+          if ($.fn.DataTable.isDataTable('#medicosTable')) $('#medicosTable').DataTable().destroy();
+          dataTableInstance = $('#medicosTable').DataTable({
+              data: globalData, searching: false, ordering: false, paging: false, info: false, scrollY: "600px", scrollCollapse: true, language: { url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json" },
+              columns: [ { data: 'Ant', visible: false }, { data: 'Medico', width: "25%", render: (d, t, r) => { let subInfo = ""; const esp = r.Especialidade; if (esp && esp !== 'Generalista') { if (r.Residente === 'Sim') { const hosp = r.HospitalResidencia ? ` (${r.HospitalResidencia})` : ''; subInfo = `<span style="color: #d32f2f; font-weight:bold;">Residente ${esp}${hosp}</span>`; } else { subInfo = `<span style="color: #555;">${esp}</span>`; } } let setoresHtml = ''; if (r.Setores) { setoresHtml = `<div class="medico-sep"></div><div style="display: flex; flex-direction: column; gap: 2px;">${renderGroupedByColor(r.Setores, 'setor')}</div>`; } return `<div style="font-size: 1.2em; color: var(--primary-color); font-weight: 700;">${d}</div>${subInfo ? `<div style="font-size: 0.9em; margin-top: 2px;">${subInfo}</div>` : ''}${setoresHtml}`; } }, { data: 'Funcoes', width: "25%", render: d => renderGroupedByColor(d, 'funcao') }, { data: 'Horarios', width: "20%", render: d => renderHorariosList(d) }, { data: 'PlantaoSPA', width: "15%", render: d => renderHorariosList(d) }, { data: 'CH', width: "5%", render: (d, t, r) => { if (!d) return '-'; const chVal = parseInt(d); let classes = 'ch-cell'; if (chVal < 30 && r.Residente !== 'Sim') classes += ' ch-warning'; return `<div class="${classes}">${d}h</div>`; } }, { data: 'Corpo', visible: false }, { data: 'Residente', visible: false } ]
+          });
+          updateKPI(); 
+          $('#medicosTable tbody').on('click', 'tr', function () { const tr = $(this); const row = dataTableInstance.row(tr); if (row.data()) openModal(row.data()); });
+      }
+      function updateKPI() { if (!dataTableInstance) return; const count = dataTableInstance.rows({ search: 'applied' }).count(); $('#kpi-count').text(count); const corpo = $('#f-corpo').val(), esp = $('#f-esp').val(), setor = $('#f-setores').val(), res = $('#f-res-switch').is(':checked'); let label = "TOTAL DE MÉDICOS"; if (corpo) label = `MÉDICOS DO ${corpo}`; else if (esp) label = esp.toUpperCase(); else if (setor) label = setor.toUpperCase(); else if (res) label = "RESIDENTES"; $('#kpi-label').text(label); }
+      function populateWeeklyFilters() { const sets = { corpo: new Set(), esp: new Set(), sector: new Set() }; globalData.forEach(r => { if(r.Corpo) sets.corpo.add(r.Corpo); if(r.Especialidade && !IGNORED_SPECIALTIES.includes(r.Especialidade)) sets.esp.add(r.Especialidade); if(r.Setores) r.Setores.split(/,|\n/).forEach(s => sets.sector.add(s.trim())); }); fillSelect('#w-corpo', sets.corpo); fillSelect('#w-setores', sets.sector); fillSelect('#w-esp', sets.esp); $('#w-corpo, #w-setores, #w-esp').select2({ placeholder: "Todos", allowClear: true }); $('#w-setores').on('change', function(e) { const val = $(this).val(); if (val === 'SPA') { isSPAMode = true; $('#w-corpo').val(null).trigger('change.select2'); $('#w-esp').val(null).trigger('change.select2'); $('#spa-title').show(); } else { if(isSPAMode) { isSPAMode = false; $('#spa-title').hide(); } } renderWeeklyGrid(); }); $('#w-corpo, #w-esp').on('change', function() { const val = $(this).val(); if (isSPAMode && val) { isSPAMode = false; $('#spa-title').hide(); $('#w-setores').val(null).trigger('change.select2'); } renderWeeklyGrid(); }); }
+      function renderWeeklyGrid() { const container = $('#grid-container'); container.empty(); if(isSPAMode) renderSPAGrid(container); else renderStandardGrid(container); }
+      function renderSPAGrid(container) { container.css('grid-template-columns', '100px repeat(7, 1fr)'); const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']; let html = '<div></div>'; dias.forEach(d => html += `<div class="grid-header">${d}</div>`); html += '<div class="grid-label label-dia">PLANTÃO DIURNO</div>'; const diasCodes = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab']; diasCodes.forEach(d => { html += `<div id="cell-${d}-dia" class="grid-cell cell-row-odd"></div>`; }); html += '<div class="grid-label label-noite">PLANTÃO NOTURNO</div>'; diasCodes.forEach(d => { html += `<div id="cell-${d}-noite" class="grid-cell cell-row-even"></div>`; }); container.html(html); try { globalData.forEach(doc => { if (doc.PlantaoSPA) { const shifts = (doc.PlantaoSPA||"").toLowerCase().split(/,|;|\n/); shifts.forEach(s => { const txt = s.trim(); let d = '', t = ''; if(txt.includes('segunda')) d='seg'; else if(txt.includes('terça')||txt.includes('terca')) d='ter'; else if(txt.includes('quarta')) d='qua'; else if(txt.includes('quinta')) d='qui'; else if(txt.includes('sexta')) d='sex'; else if(txt.includes('sábado')||txt.includes('sabado')) d='sab'; else if(txt.includes('domingo')) d='dom'; if(txt.includes('dia')) t='dia'; else if(txt.includes('noite')) t='noite'; if(d && t) { const cellId = `#cell-${d}-${t}`; const corClass = getCorpoBorderClass(doc.Corpo); $(cellId).append(`<div class="doc-card ${corClass}"><span class="doc-name">${doc.Medico}</span></div>`); } }); } }); } catch(e) { console.error(e); } }
+      function renderStandardGrid(container) { container.css('grid-template-columns', '100px repeat(5, 1fr)'); let html = `<div></div><div class="grid-header">Segunda</div><div class="grid-header">Terça</div><div class="grid-header">Quarta</div><div class="grid-header">Quinta</div><div class="grid-header">Sexta</div><div class="grid-label">MANHÃ</div><div id="cell-seg-manha" class="grid-cell cell-row-odd"></div><div id="cell-ter-manha" class="grid-cell cell-row-odd"></div><div id="cell-qua-manha" class="grid-cell cell-row-odd"></div><div id="cell-qui-manha" class="grid-cell cell-row-odd"></div><div id="cell-sex-manha" class="grid-cell cell-row-odd"></div><div class="grid-label">TARDE</div><div id="cell-seg-tarde" class="grid-cell cell-row-even"></div><div id="cell-ter-tarde" class="grid-cell cell-row-even"></div><div id="cell-qua-tarde" class="grid-cell cell-row-even"></div><div id="cell-qui-tarde" class="grid-cell cell-row-even"></div><div id="cell-sex-tarde" class="grid-cell cell-row-even"></div>`; container.html(html); const selCorpo=$('#w-corpo').val(), selSetores=$('#w-setores').val(), selEsp=$('#w-esp').val(), hasFilter=(selCorpo||selSetores||selEsp), isSpecialtyFilterActive=(selEsp!==null&&selEsp!==""); const assistenciaisList=['Ambulatório', 'Enfermaria', 'Cirurgias', 'NAIM', 'Radiologia', 'SPA']; try { globalData.forEach(doc => { if(selCorpo && doc.Corpo !== selCorpo) return; if(selEsp && doc.Especialidade !== selEsp) return; const slots = [{d:'seg', t:'manha'}, {d:'seg', t:'tarde'}, {d:'ter', t:'manha'}, {d:'ter', t:'tarde'}, {d:'qua', t:'manha'}, {d:'qua', t:'tarde'}, {d:'qui', t:'manha'}, {d:'qui', t:'tarde'}, {d:'sex', t:'manha'}, {d:'sex', t:'tarde'}]; slots.forEach(slot => { let sectorList = getSectorList(doc, slot.d, slot.t); if((!sectorList || sectorList.length===0) && hasWorkShift(doc.Horarios, slot.d, slot.t)) { const s=doc.Setores?doc.Setores.split(/,|\n/)[0].trim():''; if(s) sectorList=[s]; } if(sectorList && sectorList.length>0) { if(isSpecialtyFilterActive) { sectorList=sectorList.filter(s=>assistenciaisList.includes(s)); if(sectorList.length===0) return; } if(selSetores && !sectorList.includes(selSetores)) return; const cellId = `#cell-${slot.d}-${slot.t}`; const corClass = getCorpoBorderClass(doc.Corpo); let detailHtml = ''; if (selSetores) { if (selSetores === 'Ambulatório' || selSetores === 'Cirurgias') { if (doc.Especialidade && doc.Especialidade !== 'Generalista') { detailHtml = `<span class="doc-detail">${doc.Especialidade}</span>`; } } } else if (selCorpo || selEsp) { if (sectorList && sectorList.length > 0) { const txt = sectorList.join(' | '); detailHtml = `<span class="doc-detail">${txt}</span>`; } } $(cellId).append(`<div class="doc-card ${corClass}"><span class="doc-name">${doc.Medico}</span>${detailHtml}</div>`); } }); }); } catch(e) { console.error(e); } }
+      function hasWorkShift(horariosStr, diaCode, turnoCode) { if (!horariosStr) return false; let norm=(horariosStr||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/feira/g, "").replace(/\(.*\)/g, "").replace(/[-;.\n\r]/g, ","); const slots=norm.split(",").map(s=>s.trim()).filter(s=>s.length>0); const diaMap={'seg':['segunda','2a','2ª'],'ter':['terca','3a','3ª'],'qua':['quarta','4a','4ª'],'qui':['quinta','5a','5ª'],'sex':['sexta','6a','6ª'],'sab':['sabado','sb'],'dom':['domingo','dm']}; const turnoMap={'manha':['manha','mnh','man','dia'],'tarde':['tarde','trd','tar','dia'],'dia':['dia'],'noite':['noite']}; const diasTarget=diaMap[diaCode]||[], turnosTarget=turnoMap[turnoCode]||[]; return slots.some(slot=>{ const hasDia=diasTarget.some(d=>slot.includes(d)), hasTurno=turnosTarget.some(t=>slot.includes(t)); return hasDia && hasTurno; }); }
+      function getDiaFull(code) { const map={seg:'segunda',ter:'terça',qua:'quarta',qui:'quinta',sex:'sexta'}; return map[code]||''; }
+      function getTurnoFull(code) { return code==='manha'?'manhã':'tarde'; }
+      function getSectorList(doc, dia, turno) { const name=(doc.Medico||"").toUpperCase(), key=`${dia}-${turno}`; if(doc.PlantaoSPA) { const p=doc.PlantaoSPA.toLowerCase(), diaFull=getDiaFull(dia); if(p.includes(diaFull) && p.includes('dia')) return ['SPA']; } if(doc.EscalaEspecifica && doc.EscalaEspecifica[key]) return doc.EscalaEspecifica[key]; return []; }
+      function getCorpoBorderClass(c) { if(!c)return 'border-cinza'; c=c.toUpperCase(); if(c.includes('CSM'))return 'border-vermelho'; if(c.includes('SMV'))return 'border-amarelo'; if(c.includes('SMO'))return 'border-verde'; return 'border-cinza'; }
+      function updateModalField(id, value) { const el = $(id); const parent = el.closest('.info-item, .contact-item, .contact-sep'); if (value && value.trim() !== '' && value !== '-') { el.text(value); if (parent.length) parent.show(); } else { if (parent.length) parent.hide(); } }
+      function openModal(data) {
+          const rawName = data.Medico || 'Sem Nome'; const nip = data.NIP || ''; let title = rawName;
+          if (nip && rawName.includes(' ')) { const parts = rawName.split(' '); const rank = parts[0]; const rest = parts.slice(1).join(' '); title = `${rank} ${nip} ${rest}`; }
+          $('#modal-nome').text(title);
+          let sub = data.NomeCompleto || data.Medico; if(data.Idade) sub += `, ${data.Idade}`; $('#modal-sub').text(sub);
+          const imgUrl = (data.Imagem && data.Imagem.trim() !== "") ? data.Imagem : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; $('#modal-img').attr('src', imgUrl);
+          let specText = data.Especialidade || '-'; if(specText === 'Generalista') specText = ""; 
+          if(data.Residente === 'Sim') { const hosp = data.HospitalResidencia ? ` (${data.HospitalResidencia})` : ''; specText = `Residente ${data.Especialidade}${hosp}`; $('#modal-spec-display').addClass('resident-highlight'); } else { $('#modal-spec-display').removeClass('resident-highlight'); }
+          if (specText) { $('#modal-spec-display').text(specText).show(); } else { $('#modal-spec-display').hide(); }
+          updateModalField('#modal-email', data.Email); updateModalField('#modal-cel', data.Celular);
+          const hasEmail = data.Email && data.Email.trim() !== '' && data.Email !== '-'; const hasCel = data.Celular && data.Celular.trim() !== '' && data.Celular !== '-'; if (hasEmail && hasCel) $('#contact-sep').show(); else $('#contact-sep').hide();
+          updateModalField('#modal-nip', data.NIP); updateModalField('#modal-cpf', data.CPF); updateModalField('#modal-nasc', data.Nascimento); updateModalField('#modal-rg', data.Identidade);
+          updateModalField('#modal-crm', data.CRM); updateModalField('#modal-rqe', data.RQE); updateModalField('#modal-inc', data.Incorporacao);
+          $('#modal-ch').text(data.CH ? `${data.CH}h` : '-');
+          fillModalSchedule(data.Horarios, data.PlantaoSPA);
+          $('#medicoModal').css('display', 'flex'); setTimeout(()=>$('#medicoModal').addClass('active'), 10);
+      }
+      function fillModalSchedule(horariosStr, spaStr) {
+          $('.status-dot').removeClass('active').removeClass('active-spa');
+          const dias=['dom','seg','ter','qua','qui','sex','sab'], turnos=['manha','tarde', 'noite'];
+          const fullStr = (horariosStr||'');
+          dias.forEach(d=>{ 
+              ['manha','tarde'].forEach(t=>{ if(hasWorkShift(fullStr, d, t)) $(`#sh-${d}-${t} .status-dot`).addClass('active'); });
+              if(spaStr) {
+                  if(hasWorkShift(spaStr, d, 'dia')) { $(`#sh-${d}-manha .status-dot`).addClass('active-spa'); $(`#sh-${d}-tarde .status-dot`).addClass('active-spa'); }
+                  if(hasWorkShift(spaStr, d, 'noite')) { $(`#sh-${d}-noite .status-dot`).addClass('active-spa'); }
+              }
+          });
+      }
+      function closeModal() { $('#medicoModal').removeClass('active'); setTimeout(()=>$('#medicoModal').css('display','none'),300); }
+      const mapCoresSetores={'SPA':'bg-verde','NAC':'bg-amarelo','Ambulatório':'bg-amarelo','Auditoria':'bg-vermelho','Radiologia':'bg-amarelo','CAAPIOSE':'bg-vermelho','Cirurgias':'bg-amarelo','Enfermaria':'bg-amarelo','JRS':'bg-vermelho','Regulação':'bg-amarelo','NAIM':'bg-amarelo','EAMPE':'bg-vermelho','SIAD':'bg-verde','SMI':'bg-verde','Guias':'bg-verde'};
+      const mapCoresFuncoes={'Encarregado NAC':'bg-vermelho','Coordenação DANTS':'bg-amarelo','Encarregada NAIM':'bg-vermelho','Encarregada Seção Medicina Clínica':'bg-amarelo','Encarregada SPA':'bg-amarelo','Encarregado Oftalmologia':'bg-amarelo','Encarregado Ortopedia e Traumatologia':'bg-amarelo','Encarregado Radiologia':'bg-vermelho','Encarregado SIAD':'bg-vermelho','Encarregado Seção de Medicina Cirúrgica':'bg-amarelo','Encarregado SECOM':'bg-vermelho','Encarregado Serviço de Medicina Operativa':'bg-cinza','Encarregado SMI':'bg-vermelho','Escalante':'bg-amarelo','Membro CCIH':'bg-amarelo','Membro da Comissão de Óbitos':'bg-amarelo','Membro da Comissão de Prontuários':'bg-amarelo','Membro da JEIM':'bg-amarelo','Membro JRS':'bg-amarelo','Presidente CAAPIOSE':'bg-vermelho','Presidente CCIH':'bg-vermelho','Presidente Comissão de Farmácia e Terapêutica':'bg-vermelho','Presidente da Comissão de Óbitos':'bg-amarelo','Presidente da Comissão de Prontuários':'bg-amarelo','Presidente JRS':'bg-vermelho','Responsável Licitação':'bg-amarelo','Supervisão Enfermaria':'bg-amarelo','Supervisão PSM':'bg-amarelo','Supervisão SMI':'bg-amarelo'};
+      const prioridadeCores={'bg-vermelho':1,'bg-amarelo':2,'bg-verde':3,'bg-cinza':4,'default':5};
+      function getColorClass(t,type){t=t.trim(); if(type==='setor')return mapCoresSetores[t]||'bg-verde'; if(type==='funcao')return mapCoresFuncoes[t]||'bg-cinza'; return 'bg-cinza';}
+      function renderGroupedByColor(d,type){if(!d)return'-'; const g={1:[],2:[],3:[],4:[],5:[]}; d.split(/,|\n/).forEach(s=>{const t=s.replace(/"/g,'').trim(); if(!t)return; const c=getColorClass(t,type), p=prioridadeCores[c]||5; g[p].push(`<span class="badge ${c}">${t}</span>`);}); let h=''; [1,2,3,4,5].forEach(p=>{if(g[p].length)h+=`<div class="chip-group" style="margin-bottom:2px;">${g[p].join(' ')}</div>`;}); return h||'-';}
+      function renderHorariosList(d){if(!d)return'-'; const g={}, o=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo']; d.split(/,|\n/).forEach(s=>{const t=s.trim();if(!t)return; let db='Outros'; if(t.toLowerCase().includes('segunda'))db='Segunda';else if(t.toLowerCase().includes('terça')||t.toLowerCase().includes('terca'))db='Terça';else if(t.toLowerCase().includes('quarta'))db='Quarta';else if(t.toLowerCase().includes('quinta'))db='Quinta';else if(t.toLowerCase().includes('sexta'))db='Sexta';else if(t.toLowerCase().includes('sábado')||t.toLowerCase().includes('sabado'))db='Sábado';else if(t.toLowerCase().includes('domingo'))db='Domingo'; if(!g[db])g[db]=[]; let c='bg-default'; if(db==='Segunda')c='bg-seg';if(db==='Terça')c='bg-ter';if(db==='Quarta')c='bg-qua';if(db==='Quinta')c='bg-qui';if(db==='Sexta')c='bg-sex';if(db==='Sábado')c='bg-sab'; g[db].push(`<span class="badge ${c}">${t}</span>`);}); let h=''; o.concat(['Outros']).forEach(d=>{if(g[d])h+=`<div class="chip-group">${g[d].join(' ')}</div>`;}); return h||'-';}
+      function fillSelect(id,set){const a=Array.from(set).sort(); a.forEach(v=>{if(v)$(id).append(new Option(v,v));});}
+    </script>
+</body>
+</html>
