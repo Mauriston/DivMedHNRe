@@ -1,5 +1,5 @@
 /**
- * CODE.GS - VERSÃO FINAL (FÉRIAS CORRIGIDO)
+ * CODE.GS - VERSÃO ATUALIZADA
  */
 
 const SPREADSHEET_ID = '1dOa795N5fH2QQcizHl-E47SFSX8APB6nVWQZFDj3uMI';
@@ -12,7 +12,7 @@ function doGet() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-// --- FUNÇÃO DE FÉRIAS (INDISPENSÁVEL PARA A TIMELINE) ---
+// --- FUNÇÃO DE FÉRIAS ---
 function getFeriasData() {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -43,7 +43,6 @@ function getFeriasData() {
       const ini = row[map.inicio];
       const fim = row[map.termino];
 
-      // Só adiciona se tiver Médico e Datas
       if (med && ini && fim) {
         result.push({
           Corpo: row[map.corpo] || '',
@@ -170,7 +169,7 @@ function getMedicosData() {
       residente: getIdx(['residente']),
       hospital: getIdx(['hospital residencia', 'hospital']),
       setores: getIdx(['setores', 'setor']),
-      horarios: getIdx(['horários', 'horarios', 'escala']),
+      horários: getIdx(['horários', 'horarios', 'escala']),
       plantao_spa: getIdx(['plantão fixo spa', 'plantao fixo spa']), 
       ch: getIdx(['ch', 'carga', 'carga horaria']),
       funcoes: getIdx(['funções', 'funcoes', 'função']),
@@ -185,7 +184,8 @@ function getMedicosData() {
       rqe: getIdx(['rqe']),
       incorporacao: getIdx(['incorporação']),
       tempo: getIdx(['tempo serviço', 'tempo']),
-      imagem: getIdx(['imagem', 'foto', 'img'])
+      imagem: getIdx(['imagem', 'foto', 'img']),
+      sim: getIdx(['sim']) // Mapeamento da coluna 'Sim'
     };
 
     if (map.medico === -1) throw new Error("Coluna 'Médico' não encontrada.");
@@ -197,7 +197,7 @@ function getMedicosData() {
       const medicoFinal = nomeGuerra || val(map.nome_civil) || "Desconhecido"; 
       const isRes = val(map.residente).toUpperCase();
       const residente = (isRes === 'TRUE' || isRes === 'SIM' || isRes === 'S') ? 'Sim' : 'Não';
-      const chCalculada = CALCULAR_CH(val(map.horarios), val(map.plantao_spa));
+      const chCalculada = CALCULAR_CH(val(map.horários), val(map.plantao_spa));
 
       return {
         Ant: parseInt(val(map.ant)) || 9999,
@@ -208,7 +208,7 @@ function getMedicosData() {
         Residente: residente,
         HospitalResidencia: val(map.hospital),
         Setores: val(map.setores),
-        Horarios: val(map.horarios),
+        Horarios: val(map.horários),
         PlantaoSPA: val(map.plantao_spa),
         CH: chCalculada, 
         Funcoes: val(map.funcoes),
@@ -224,6 +224,7 @@ function getMedicosData() {
         Incorporacao: val(map.incorporacao),
         TempoServico: val(map.tempo),
         Imagem: val(map.imagem), 
+        Renovacao: val(map.sim), // Nova propriedade
         EscalaEspecifica: escalaEspec[medicoFinal.toUpperCase().trim()] || null 
       };
     });
