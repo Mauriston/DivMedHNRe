@@ -9,11 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
@@ -53,21 +51,228 @@
           border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;
       }
 
-      /* --- VIEW LISTA --- */
-      .filter-bar-lista { display: flex; gap: 30px; align-items: stretch; background: #E0E0E0; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-      .kpi-card { background: white; border-radius: 10px; padding: 15px 25px; min-width: 220px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-      #kpi-count { font-family: var(--font-head); font-size: 3.5em; font-weight: 800; color: var(--primary-color); line-height: 1; margin-bottom: 5px; }
-      #kpi-label { font-family: var(--font-head); font-size: 0.85em; font-weight: bold; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
-      .filter-wrapper-lista { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
-      .filter-header-lista { font-family: var(--font-head); color: var(--primary-color); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 14px; }
-      .filter-grid-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end; }
-      .filter-grid-lista label { font-family: var(--font-head); font-size: 11px; font-weight: bold; color: var(--primary-color); display: block; margin-bottom: 4px; text-transform: uppercase; }
+      /* --- KANBAN BOARD (Card View) --- */
+      .kanban-board {
+        display: flex;
+        gap: 20px;
+        padding-bottom: 20px;
+        align-items: flex-start;
+        overflow-x: auto;
+        height: calc(100vh - 280px); /* Ajustado para compensar o novo filtro */
+      }
+
+      .kanban-column {
+        flex: 1;
+        min-width: 320px;
+        background-color: #E0E0E0;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .kanban-header {
+        padding: 15px;
+        /* Gradiente discreto baseado na cor principal (#050F41) */
+        background: linear-gradient(135deg, var(--primary-color) 0%, #1565C0 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        font-family: var(--font-head);
+        font-weight: 700;
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 1.2em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .kanban-count {
+        background: rgba(0,0,0,0.2); /* Escurecido para melhor contraste em fundos claros */
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        color: white;
+      }
+
+      .kanban-content {
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        flex-grow: 1;
+      }
+
+      .kanban-content::-webkit-scrollbar { width: 6px; }
+      .kanban-content::-webkit-scrollbar-track { background: transparent; }
+      .kanban-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+
+      .kanban-card {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-left: 5px solid var(--primary-color);
+        position: relative;
+      }
+
+      .kanban-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+      }
+
+      /* ESTILOS PARA BAIXA / PROVÁVEL BAIXA (Kanban e Doc-Card) */
+      .kanban-card.card-baixa, .doc-card.card-baixa {
+        opacity: 0.5; /* Aumentada a transparência (era 0.7) */
+        background-color: #e0e0e0; /* Fundo ligeiramente mais escuro para parecer inativo */
+        box-shadow: none; /* Remove sombra para parecer "desativado" */
+      }
+      .kanban-card.card-baixa:hover, .doc-card.card-baixa:hover {
+        transform: none; /* Remove efeito de hover */
+        background-color: #d6d6d6;
+      }
+
+      .k-status-label {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-family: var(--font-head);
+        font-size: 0.55em; /* Reduzido de 0.65em */
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #b71c1c; /* Vermelho escuro para destaque */
+        letter-spacing: 0.5px;
+      }
+
+      .card-csm { border-left-color: #c62828; }
+      .card-smv { border-left-color: #FBC02D; }
+      .card-smo { border-left-color: #2E7D32; }
       
+      .k-card-title {
+        font-family: var(--font-head);
+        font-weight: 800;
+        color: #333;
+        font-size: 0.85em; /* Reduzido de 1.0em */
+        margin-bottom: 8px; 
+        line-height: 1.3;
+        padding-right: 60px; /* Espaço para o label de baixa */
+      }
+
+      .k-residente-badge {
+        background-color: #FFECB3;
+        color: #FF6F00;
+        font-size: 0.6em; /* Reduzido de 0.7em */
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-weight: bold;
+        margin-left: 6px;
+        vertical-align: middle;
+        display: inline-block;
+      }
+
+      .k-chips-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center; 
+      }
+
+      .k-chip {
+        font-size: 0.6em; /* Reduzido de 0.7em */
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-weight: 600;
+        display: inline-block;
+      }
+
+      .k-chip.sector {
+        background-color: #E3F2FD;
+        color: #1565C0;
+        border: 1px solid #BBDEFB;
+      }
+
+      .k-chip.function {
+        background-color: #F3E5F5;
+        color: #7B1FA2;
+        border: 1px solid #E1BEE7;
+      }
+
+      /* DIVIDER VERTICAL */
+      .k-divider {
+        width: 1px;
+        height: 14px;
+        background-color: #bdbdbd; 
+        margin: 0 4px;
+        display: inline-block;
+        flex-shrink: 0;
+      }
+
       /* --- VIEW SEMANAL & FÉRIAS --- */
       .filter-bar { background: #E0E0E0; padding: 15px 30px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; min-height: 80px; }
       .filter-container-right { display: flex; gap: 15px; align-items: center; justify-content: flex-end; min-width: 400px; }
       .filter-mini-item { display: flex; flex-direction: column; width: 180px; }
       .filter-mini-item label { font-family: var(--font-head); font-size: 10px; font-weight: bold; color: var(--primary-color); text-transform: uppercase; margin-bottom: 2px; }
+
+      /* FILTRO DA LISTA (SIMPLIFICADO) */
+      .filter-bar-simple {
+        background: #E0E0E0; 
+        padding: 10px 15px; 
+        border-radius: 8px; 
+        margin-bottom: 15px; 
+        display: flex; 
+        align-items: center;
+        justify-content: space-between; /* Espaça o filtro do KPI */
+        gap: 15px;
+      }
+      .filter-simple-item {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        max-width: 400px;
+      }
+      .filter-simple-item label {
+        font-family: var(--font-head); 
+        font-size: 10px; 
+        font-weight: bold; 
+        color: var(--primary-color); 
+        text-transform: uppercase; 
+        margin-bottom: 2px;
+      }
+
+      /* KPI NO FILTRO */
+      .filter-kpi-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        padding: 5px 15px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        min-width: 100px;
+        border-left: 4px solid var(--primary-color);
+      }
+      .filter-kpi-value {
+        font-family: var(--font-head);
+        font-size: 1.4em;
+        font-weight: 800;
+        color: var(--primary-color);
+        line-height: 1;
+      }
+      .filter-kpi-label {
+        font-family: var(--font-head);
+        font-size: 0.65em;
+        font-weight: bold;
+        color: #666;
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
 
       /* --- DASHBOARD --- */
       .dashboard-container { display: flex; flex-direction: column; gap: 20px; }
@@ -90,23 +295,6 @@
       .clear-filter-btn:hover { background-color: #b71c1c; }
 
       /* COMPONENTES GERAIS */
-      .switch-container { display: flex; align-items: center; gap: 10px; height: 38px; }
-      .switch { position: relative; display: inline-block; width: 46px; height: 22px; margin-bottom: 0; }
-      .switch input { opacity: 0; width: 0; height: 0; }
-      .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-      .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-      input:checked + .slider { background-color: var(--primary-color); }
-      input:focus + .slider { box-shadow: 0 0 1px var(--primary-color); }
-      input:checked + .slider:before { transform: translateX(24px); }
-      .switch-label { font-family: var(--font-head); font-size: 11px; font-weight: bold; color: var(--primary-color); text-transform: uppercase; }
-
-      .table-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-      table.dataTable { width: 100% !important; border-collapse: collapse !important; }
-      table.dataTable thead th { background-color: var(--primary-color) !important; color: #ffffff !important; font-family: var(--font-head); text-transform: uppercase; font-size: 16px; padding: 14px 10px; cursor: default !important; background-image: none !important; border-bottom: none !important; }
-      table.dataTable tbody td { padding: 14px 10px; font-size: 16px; vertical-align: top; border-bottom: 1px solid #eee; line-height: 1.5; cursor: pointer; }
-      table.dataTable tbody tr:hover { background-color: #f1f5f9 !important; }
-      .medico-sep { border-top: 1px dashed #ccc; margin: 8px 0 4px 0; width: 100%; opacity: 0.6; }
-
       .weekly-grid { display: grid; gap: 1px; background-color: #ddd; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
       .grid-header, .grid-label, .grid-cell { background-color: white; padding: 10px; }
       .grid-header { font-family: var(--font-head); font-weight: bold; color: var(--primary-color); text-align: center; text-transform: uppercase; display: flex; align-items: center; justify-content: center; }
@@ -171,7 +359,7 @@
       .info-item label { display: block; font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; margin-bottom: 3px; }
       .info-item div { font-size: 14px; color: #333; font-weight: 500; word-break: break-word; }
       .info-full { grid-column: 1 / -1; }
-      .modal-section-title { border-bottom: 2px solid #eee; color: var(--primary-color); font-family: var(--font-head); font-weight: bold; font-size: 15px; padding-bottom: 5px; margin: 15px 0 10px 0; text-transform: uppercase; }
+      .modal-section-title { border-bottom: 2px solid #eee; color: var(--primary-color); font-family: var(--font-head); font-weight: bold; font-size: 15px; padding-bottom: 5px; margin: 30px 0 15px 0; text-transform: uppercase; }
       .mini-schedule { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ddd; }
       .mini-schedule th { background-color: #f0f4f8; padding: 2px; text-align: center; font-size: 10px; font-weight: bold; color: #555; border: 1px solid #ddd; text-transform: uppercase; width: 12%; }
       .mini-schedule td { border: 1px solid #ddd; padding: 2px; text-align: center; font-size: 9px; color: #333; height: 25px; }
@@ -188,6 +376,8 @@
           .header-stacked-info { align-items: center; } 
           .contact-combined-line { justify-content: center; } 
           .dash-charts-grid { grid-template-columns: 1fr; }
+          .kanban-board { flex-direction: column; overflow-x: hidden; height: auto; }
+          .kanban-column { min-width: 100%; margin-bottom: 20px; }
       }
 
       #loader { text-align: center; padding: 40px; color: var(--primary-color); }
@@ -219,36 +409,51 @@
         <h3>Carregando dados...</h3>
     </div>
 
+    <!-- VIEW LISTA (KANBAN) -->
     <div id="view-lista">
-        <div class="filter-bar-lista">
-            <div class="kpi-card">
-                <div id="kpi-count">-</div>
-                <div id="kpi-label">TOTAL DE MÉDICOS</div>
+        <!-- NOVO FILTRO DE SETOR COM KPI -->
+        <div class="filter-bar-simple">
+            <div class="filter-simple-item">
+                <label>Filtrar por Setor</label>
+                <select id="f-setor-kanban" multiple="multiple" style="width:100%">
+                    <option></option>
+                    <option value="Auditoria">Auditoria</option>
+                    <option value="CAAPIOSE">CAAPIOSE</option>
+                    <option value="Enfermaria">Enfermaria</option>
+                    <option value="Guias">Guias</option>
+                    <option value="JRS">JRS</option>
+                    <option value="NAIM">NAIM</option>
+                    <option value="Regulação">Regulação</option>
+                    <option value="SIAD">SIAD</option>
+                    <option value="SMI">SMI</option>
+                </select>
             </div>
-            <div class="filter-wrapper-lista">
-                <div class="filter-header-lista"><span class="material-symbols-outlined">filter_list</span> FILTROS</div>
-                <div class="filter-grid-lista">
-                    <div class="filter-item"><label>Corpo</label><select id="f-corpo" style="width:100%"><option></option></select></div>
-                    <div class="filter-item"><label>Setores</label><select id="f-setores" style="width:100%"><option></option></select></div>
-                    <div class="filter-item"><label>Especialidade</label><select id="f-esp" style="width:100%"><option></option></select></div>
-                    <div class="filter-item">
-                        <div class="switch-container">
-                            <label class="switch">
-                                <input type="checkbox" id="f-res-switch">
-                                <span class="slider"></span>
-                            </label>
-                            <span class="switch-label">Residentes</span>
-                        </div>
-                    </div>
-                </div>
+            <!-- Novo KPI Card -->
+            <div class="filter-kpi-card">
+                <div class="filter-kpi-value" id="kpi-setor-total">-</div>
+                <div class="filter-kpi-label">MÉDICOS</div>
             </div>
         </div>
-        <div class="table-card">
-            <table id="medicosTable" class="display">
-                <thead>
-                    <tr><th>Ant</th><th>Médico</th><th>Funções</th><th>Horários</th><th>SPA fixo</th><th>CH</th><th>_Corpo</th><th>_Residente</th></tr>
-                </thead>
-            </table>
+
+        <div class="kanban-board">
+            <div class="kanban-column">
+                <div class="kanban-header">CSM <span id="count-csm" class="kanban-count">0</span></div>
+                <div class="kanban-content" id="list-csm">
+                    <!-- Cards CSM -->
+                </div>
+            </div>
+            <div class="kanban-column">
+                <div class="kanban-header">SMV <span id="count-smv" class="kanban-count">0</span></div>
+                <div class="kanban-content" id="list-smv">
+                    <!-- Cards SMV -->
+                </div>
+            </div>
+            <div class="kanban-column">
+                <div class="kanban-header">SMO <span id="count-smo" class="kanban-count">0</span></div>
+                <div class="kanban-content" id="list-smo">
+                    <!-- Cards SMO -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -256,9 +461,10 @@
         <div class="filter-bar">
             <div class="page-title">DETALHE SEMANAL</div>
             <div class="filter-container-right">
-                <div class="filter-mini-item"><label>Corpo</label><select id="w-corpo" style="width:100%"><option></option></select></div>
-                <div class="filter-mini-item"><label>Setores</label><select id="w-setores" style="width:100%"><option></option></select></div>
-                <div class="filter-mini-item"><label>Especialidade</label><select id="w-esp" style="width:100%"><option></option></select></div>
+                <!-- MULTIPLE SELECT PARA A VISTA SEMANAL TAMBÉM -->
+                <div class="filter-mini-item"><label>Corpo</label><select id="w-corpo" multiple="multiple" style="width:100%"><option></option></select></div>
+                <div class="filter-mini-item"><label>Setores</label><select id="w-setores" multiple="multiple" style="width:100%"><option></option></select></div>
+                <div class="filter-mini-item"><label>Especialidade</label><select id="w-esp" multiple="multiple" style="width:100%"><option></option></select></div>
             </div>
         </div>
         
@@ -267,15 +473,9 @@
         <div id="grid-container" class="weekly-grid"></div>
     </div>
 
-    <div id="view-ferias" class="hidden">
-        <div class="filter-bar">
-            <div class="page-title">PROGRAMAÇÃO DE FÉRIAS 2026</div>
-            <div class="filter-container-right">
-                <div class="filter-mini-item"><label>Corpo</label><select id="fer-corpo" style="width:100%"><option></option></select></div>
-                <div class="filter-mini-item"><label>Setor</label><select id="fer-setor" style="width:100%"><option></option></select></div>
-            </div>
-        </div>
-        <div id="timeline-chart"></div>
+    <div id="view-ferias" class="hidden" style="height: calc(100vh - 120px);">
+        <!-- IFRAME FÉRIAS -->
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRApDh10OBdzMKjGR47ei7o_47w6Rc0q1TapqYkqRK4ioa9Xcyvj8nz6Pyu8OVZrNZPSt_5Y6qsU1vO/pubhtml?gid=1418395800&amp;single=true&amp;widget=true&amp;headers=false" style="width:100%; height:100%; border:none;"></iframe>
     </div>
 
     <div id="view-dashboard" class="hidden">
@@ -352,6 +552,21 @@
                     <div class="info-item" id="box-rqe"><label>RQE</label><div id="modal-rqe">-</div></div>
                     <div class="info-item" id="box-inc"><label>Incorporação</label><div id="modal-inc">-</div></div>
                 </div>
+
+                <!-- Nova seção: SETORES -->
+                <div class="modal-section-title" id="sec-setores" style="display:none;">SETORES</div>
+                <div class="info-grid" id="grid-setores" style="display:none;">
+                    <div class="info-item info-full" id="box-setores" style="background: white; border: none; padding: 0;">
+                        <div id="modal-setores-content" class="k-chips-container" style="justify-content: flex-start;"></div>
+                    </div>
+                </div>
+
+                <div class="modal-section-title" id="sec-funcoes" style="display:none;">FUNÇÕES</div>
+                <div class="info-grid" id="grid-funcoes" style="display:none;">
+                    <div class="info-item info-full" id="box-funcoes" style="background: white; border: none; padding: 0;">
+                        <div id="modal-funcoes-content" class="k-chips-container" style="justify-content: flex-start;"></div>
+                    </div>
+                </div>
                 
                 <div class="modal-section-title">HORÁRIOS</div>
                 <div class="info-item info-full" style="background:white; border:none; padding:0;">
@@ -374,53 +589,70 @@
     </div>
 
     <script>
-      let globalData = []; let globalFeriasData = []; let currentView = 'lista'; let dataTableInstance = null; let isSPAMode = false;
+      let globalData = []; let globalFeriasData = []; let currentView = 'lista'; let isSPAMode = false;
       const IGNORED_SPECIALTIES = ['Anestesiologia', 'Cirurgia Cardiovascular', 'Clínica Médica', 'Generalista'];
       let chartLibReady = false;
       let doctorAntMap = {};
       let currentDashFilter = null; 
 
-      $.fn.dataTable.ext.search = []; 
-      $.fn.dataTable.ext.search.push(function(settings, searchData, index, rowData, counter) {
-          if (settings.nTable.id !== 'medicosTable') return true;
-          const data = settings.aoData[index]._aData; if (!data) return true;
-          const selCorpo = $('#f-corpo').val(), selSetores = $('#f-setores').val(), selEsp = $('#f-esp').val(), isResidenteOnly = $('#f-res-switch').is(':checked');
-          if (selCorpo && selCorpo !== "" && data.Corpo !== selCorpo) return false;
-          if (selEsp && selEsp !== "" && data.Especialidade !== selEsp) return false;
-          if (isResidenteOnly && data.Residente !== 'Sim') return false;
-          if (selSetores && selSetores !== "") { const medSetores = (data.Setores || '').split(/,|\n/).map(s => s.trim()); if (!medSetores.includes(selSetores)) return false; }
-          return true;
-      });
-
       google.charts.load('current', {'packages':['timeline', 'corechart'], 'language': 'pt'});
-      google.charts.setOnLoadCallback(() => { chartLibReady = true; if (currentView === 'ferias') drawFeriasChart(); if (currentView === 'dashboard') updateDashboard(); });
+      google.charts.setOnLoadCallback(() => { chartLibReady = true; if (currentView === 'dashboard') updateDashboard(); });
+
+      // DEBOUNCE FUNCTION: Evita que a função seja chamada repetidamente em curto espaço de tempo
+      function debounce(func, wait) {
+          let timeout;
+          return function(...args) {
+              const context = this;
+              clearTimeout(timeout);
+              timeout = setTimeout(() => func.apply(context, args), wait);
+          };
+      }
+
+      // Versão Debounced da renderização da grelha semanal
+      const processWeeklyGrid = debounce(() => renderWeeklyGrid(), 300);
 
       $(document).ready(function() {
-          $('.filter-item select, .filter-mini-item select').select2({ placeholder: "Todos", allowClear: true });
+          $('.filter-mini-item select').attr('multiple', 'multiple').select2({ placeholder: "Todos", allowClear: true, closeOnSelect: false });
           
-          $('#f-corpo, #f-setores, #f-esp').on('change select2:select select2:unselect', function () { if(dataTableInstance) { dataTableInstance.draw(); updateKPI(); } });
-          $('#f-res-switch').on('change', function() { if(dataTableInstance) { dataTableInstance.draw(); updateKPI(); } });
-          
-          // FILTROS FÉRIAS
-          $('#fer-corpo, #fer-setor').on('change', drawFeriasChart);
+          // INICIALIZAR O FILTRO KANBAN
+          $('#f-setor-kanban').attr('multiple', 'multiple').select2({
+              placeholder: "Selecione Setores...",
+              allowClear: true,
+              closeOnSelect: false
+          });
+
+          // EVENTO DO FILTRO KANBAN
+          $('#f-setor-kanban').on('change', function() {
+              initListView(); // Re-renderiza o Kanban com o filtro aplicado
+          });
+
+          // FILTROS FÉRIAS (Não utilizados mais devido ao iframe, mas mantidos por compatibilidade)
+          $('#fer-corpo, #fer-setor').on('change', function(){}); 
           $(window).resize(function() { 
-              if(currentView === 'ferias') drawFeriasChart(); 
               if(currentView === 'dashboard') updateDashboard(currentDashFilter);
           });
 
           // FILTROS SEMANAIS (TÍTULO DINAMICO)
           $('#w-setores').on('change', function(e) { 
               const val = $(this).val(); 
-              updateWeeklyTitle(val); 
-              if (val === 'SPA') { 
+              // Se val for array, pega o primeiro para titulo, ou ajusta lógica
+              const firstVal = (val && val.length > 0) ? val[0] : null;
+              updateWeeklyTitle(firstVal); 
+              
+              if (val && val.includes('SPA')) { 
                   isSPAMode = true; $('#w-corpo').val(null).trigger('change.select2'); $('#w-esp').val(null).trigger('change.select2'); 
               } else { if(isSPAMode) { isSPAMode = false; } } 
-              renderWeeklyGrid(); 
+              
+              // CHAMADA DEBOUNCED
+              processWeeklyGrid(); 
           });
+          
           $('#w-corpo, #w-esp').on('change', function() { 
               const val = $(this).val(); 
-              if (isSPAMode && val) { isSPAMode = false; $('#w-setores').val(null).trigger('change.select2'); updateWeeklyTitle(null); } 
-              renderWeeklyGrid(); 
+              if (isSPAMode && val && val.length > 0) { isSPAMode = false; $('#w-setores').val(null).trigger('change.select2'); updateWeeklyTitle(null); } 
+              
+              // CHAMADA DEBOUNCED
+              processWeeklyGrid(); 
           });
 
           google.script.run.withSuccessHandler(onDataLoaded).withFailureHandler(handleError).getMedicosData();
@@ -434,17 +666,147 @@
           if (!data || data.length === 0) { handleError({ message: "Sem dados." }); return; }
           globalData = data;
           globalData.forEach(d => { doctorAntMap[d.Medico] = d.Ant; });
-          initListView(); populateWeeklyFilters();
+          initListView(); 
+          populateWeeklyFilters();
           if (currentView === 'dashboard') updateDashboard();
       }
-      function onFeriasLoaded(data) { globalFeriasData = data; populateFeriasFilters(); }
+      function onFeriasLoaded(data) { 
+         // Dados carregados, mas agora usamos iframe. Mantemos a variável se necessário futuramente.
+         if (!data) return;
+         globalFeriasData = data;
+      }
 
       function switchView(viewName) {
           $('.nav-btn').removeClass('active'); $('#view-lista, #view-semanal, #view-ferias, #view-dashboard').addClass('hidden'); currentView = viewName;
           if (viewName === 'lista') { $('#view-lista').removeClass('hidden'); $('#btn-lista').addClass('active'); } 
           else if (viewName === 'semanal') { $('#view-semanal').removeClass('hidden'); $('#btn-semanal').addClass('active'); renderWeeklyGrid(); } 
-          else if (viewName === 'ferias') { $('#view-ferias').removeClass('hidden'); $('#btn-ferias').addClass('active'); drawFeriasChart(); }
+          else if (viewName === 'ferias') { $('#view-ferias').removeClass('hidden'); $('#btn-ferias').addClass('active'); } // Removida chamada de chart
           else if (viewName === 'dashboard') { $('#view-dashboard').removeClass('hidden'); $('#btn-dash').addClass('active'); updateDashboard(currentDashFilter); }
+      }
+
+      // --- KANBAN VIEW ---
+      function initListView() {
+          $('#list-csm, #list-smv, #list-smo').empty();
+          let counts = { CSM: 0, SMV: 0, SMO: 0 };
+          let totalFiltered = 0; // Adicionado para KPI
+
+          // Obter valor do filtro
+          const selectedSectors = $('#f-setor-kanban').val();
+
+          // LISTA DE FUNÇÕES PERMITIDAS NOS CARDS
+          const cardFunctionsWhitelist = [
+              'Encarregado Divisão de Medicina',
+              'Encarregada NAIM',
+              'Encarregada Seção Medicina Clínica',
+              'Encarregado Oftalmologia',
+              'Encarregado Ortopedia e Traumatologia',
+              'Encarregado NAC',
+              'Encarregado Radiologia',
+              'Encarregado SIAD',
+              'Encarregado Seção de Medicina Cirúrgica',
+              'Encarregado SMI',
+              'Gerente SMI',
+              'Presidente CAAPIOSE',
+              'Presidente JRS'
+          ];
+
+          globalData.forEach(doc => {
+              // Lógica de Filtro
+              if (selectedSectors && selectedSectors.length > 0) {
+                  const docSectors = (doc.Setores || '').split(/,|\n/).map(s => s.trim());
+                  // Verifica se ALGUM dos setores do médico está na lista selecionada
+                  const hasOverlap = selectedSectors.some(sel => docSectors.includes(sel));
+                  if (!hasOverlap) return; // Pula este médico se não corresponder
+              }
+
+              const corpo = (doc.Corpo || '').toUpperCase().trim();
+              let targetList = '';
+              let borderClass = '';
+              
+              if (corpo === 'CSM') { targetList = '#list-csm'; counts.CSM++; borderClass='card-csm'; }
+              else if (corpo === 'SMV') { targetList = '#list-smv'; counts.SMV++; borderClass='card-smv'; }
+              else if (corpo === 'SMO') { targetList = '#list-smo'; counts.SMO++; borderClass='card-smo'; }
+              else return; 
+
+              totalFiltered++; // Incrementa total após passar filtros
+
+              const name = doc.Medico;
+              
+              // Nova lógica para especialidade
+              const rawSpecialty = doc.Especialidade || '';
+              let specialtyDisplay = '';
+              if (rawSpecialty && rawSpecialty !== 'Generalista' && rawSpecialty !== 'Sem Especialidade') {
+                  // Estilo inline similar ao antigo subtítulo
+                  specialtyDisplay = `<span style="font-size: 0.75em; color: #666; font-weight: 600;"> - ${rawSpecialty}</span>`;
+              }
+
+              const sectors = (doc.Setores || '').split(/,|\n/).map(s => s.trim()).filter(s => s);
+              const mainSector = sectors.length > 0 ? sectors[0] : null;
+              
+              const functions = (doc.Funcoes || '').split(/,|\n/).map(f => f.trim()).filter(f => f);
+              
+              // FILTRA AS FUNÇÕES PARA EXIBIÇÃO NO CARD
+              const visibleFunctions = functions.filter(f => cardFunctionsWhitelist.includes(f));
+
+              let chipsHtml = '';
+              if (mainSector) {
+                  chipsHtml += `<span class="k-chip sector">${mainSector}</span>`;
+              }
+              
+              // Divider logic - apenas se houver setor E funções visíveis
+              if (mainSector && visibleFunctions.length > 0) {
+                  chipsHtml += `<div class="k-divider"></div>`;
+              }
+
+              visibleFunctions.forEach(f => {
+                  chipsHtml += `<span class="k-chip function">${f}</span>`;
+              });
+
+              // Badge de Residente movido para junto da especialidade
+              const residentBadge = doc.Residente === 'Sim' ? '<span class="k-residente-badge">Residente</span>' : '';
+
+              // LOGICA DE RENOVAÇÃO (BAIXA)
+              const renovacao = (doc.Renovacao || '').toLowerCase().trim();
+              let statusLabel = '';
+              let statusClass = '';
+              let displayName = name; // Nome padrão
+
+              if (renovacao === 'não' || renovacao === 'nao') {
+                  statusLabel = 'BAIXA';
+                  statusClass = 'card-baixa';
+                  // Aplica riscado se for baixa
+                  displayName = `<span style="text-decoration: line-through;">${name}</span>`;
+              } else if (renovacao === 'talvez') {
+                  statusLabel = 'PROVÁVEL BAIXA';
+                  statusClass = 'card-baixa';
+                  // Aplica riscado se for provável baixa também
+                  displayName = `<span style="text-decoration: line-through;">${name}</span>`;
+              }
+
+              const card = $(`
+                  <div class="kanban-card ${borderClass} ${statusClass}">
+                      ${ statusLabel ? `<div class="k-status-label">${statusLabel}</div>` : '' }
+                      <div class="k-card-title">
+                          ${displayName}${specialtyDisplay}
+                          ${residentBadge}
+                      </div>
+                      <div style="margin-bottom:8px;"></div>
+                      <div class="k-chips-container">
+                          ${chipsHtml}
+                      </div>
+                  </div>
+              `);
+              
+              card.on('click', () => openModal(doc));
+              $(targetList).append(card);
+          });
+
+          $('#count-csm').text(counts.CSM);
+          $('#count-smv').text(counts.SMV);
+          $('#count-smo').text(counts.SMO);
+          
+          // Atualiza o KPI com o total filtrado
+          $('#kpi-setor-total').text(totalFiltered);
       }
 
       // --- LOGICA DO DASHBOARD ---
@@ -464,7 +826,6 @@
           currentDashFilter = filter;
           if (filter) $('#btn-clear-dash').show(); else $('#btn-clear-dash').hide();
 
-          // 1. Filtrar Dados
           let dashData = globalData.filter(d => {
               if (!filter) return true;
               if (filter.type === 'Corpo' && d.Corpo !== filter.value) return false;
@@ -480,14 +841,12 @@
               return true;
           });
 
-          // 2. Calcular KPIs
           const total = dashData.length;
           const especialistas = dashData.filter(d => isSpecialist(d)).length;
           const generalistas = dashData.filter(d => d.Especialidade === 'Generalista').length;
           const residentes = dashData.filter(d => d.Residente === 'Sim').length;
           const totalCH = dashData.reduce((sum, d) => sum + (parseInt(d.CH)||0), 0);
           
-          // Média Idade
           let ageSum = 0; let ageCount = 0;
           dashData.forEach(d => {
               if (d.Idade) {
@@ -497,7 +856,6 @@
           });
           const avgAge = ageCount > 0 ? Math.round(ageSum / ageCount) : 0;
 
-          // Atualizar DOM KPIs
           $('#kpi-total').text(total);
           $('#kpi-especialistas').text(especialistas);
           $('#kpi-generalistas').text(generalistas);
@@ -505,7 +863,6 @@
           $('#kpi-ch').text(totalCH);
           $('#kpi-idade').text(avgAge > 0 ? avgAge : '-');
 
-          // 3. Gerar Gráficos
           drawSpecChart(dashData);
           drawCorpoChart(dashData);
           drawSetorChart(dashData);
@@ -524,7 +881,7 @@
           dt.addColumn('string', 'Especialidade');
           dt.addColumn('number', 'Qtd');
           const rows = Object.entries(specMap).map(([k,v])=>[k,v]);
-          rows.sort((a,b) => b[1] - a[1]); // Descending
+          rows.sort((a,b) => b[1] - a[1]);
           dt.addRows(rows);
 
           const chart = new google.visualization.BarChart(document.getElementById('chart-especialidades'));
@@ -612,7 +969,7 @@
           });
       }
 
-      // --- TÍTULOS DINÂMICOS (SEMANAL) ---
+      // --- TÍTULOS DINÂMICOS E FILTROS SEMANAIS ---
       function updateWeeklyTitle(setor) {
           const titles = {
               'JRS': 'Junta Regular de Saúde',
@@ -622,13 +979,11 @@
               'Guias': 'Seção de Guias',
               'Regulação': 'Divisão de Regulação',
               'Auditoria': 'Serviço de Auditoria',
-              'SPA': 'ESCALA SPA (Apenas plantões fixos)' // SPA Mantido como solicitado
+              'SPA': 'ESCALA SPA (Apenas plantões fixos)'
           };
-          
           if (setor && titles[setor]) {
               $('#dynamic-weekly-title').text(titles[setor]);
           } else if (setor) {
-              // Se não estiver na lista especial, usa o nome do setor
               $('#dynamic-weekly-title').text(setor.toUpperCase());
           } else {
               $('#dynamic-weekly-title').text('DIVISÃO DE MEDICINA');
@@ -656,94 +1011,122 @@
           return `<div class="tooltip-box"><div class="tooltip-title">${name}</div><div class="tooltip-row"><span class="tooltip-label">Setor:</span> ${setor}</div><div class="tooltip-row"><span class="tooltip-label">Início:</span> ${s1}</div><div class="tooltip-row"><span class="tooltip-label">Fim:</span> ${s2}</div></div>`;
       }
 
-      function drawFeriasChart() {
-          if (!chartLibReady || !globalFeriasData || globalFeriasData.length === 0) return;
-          
-          const container = document.getElementById('timeline-chart');
-          const chart = new google.visualization.Timeline(container);
-          const dataTable = new google.visualization.DataTable();
-
-          dataTable.addColumn({ type: 'string', id: 'Médico' }); 
-          dataTable.addColumn({ type: 'string', id: 'Info' });   
-          dataTable.addColumn({ type: 'string', role: 'style' }); 
-          dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true} });
-          dataTable.addColumn({ type: 'date', id: 'Start' });
-          dataTable.addColumn({ type: 'date', id: 'End' });
-
-          const fCorpo = $('#fer-corpo').val(), fSetor = $('#fer-setor').val();
-          let filteredRows = globalFeriasData.filter(item => {
-              if (fCorpo && item.Corpo !== fCorpo) return false;
-              if (fSetor && item.Setor !== fSetor) return false;
-              return true;
-          });
-
-          if (filteredRows.length === 0) { container.innerHTML = '<div style="text-align:center; padding:50px;">Nenhum registro encontrado.</div>'; return; }
-
-          const order = { 'CSM': 1, 'SMV': 2, 'SMO': 3 };
-          filteredRows.sort((a, b) => {
-              const diffCorpo = (order[a.Corpo] || 99) - (order[b.Corpo] || 99);
-              if(diffCorpo !== 0) return diffCorpo;
-              const antA = doctorAntMap[a.Medico] || 9999;
-              const antB = doctorAntMap[b.Medico] || 9999;
-              return antA - antB; 
-          });
-
-          const rows = [];
-          const uniqueDoctors = new Set();
-          let currentYear = new Date().getFullYear();
-
-          filteredRows.forEach(item => {
-              const d1 = parseDate(item.Inicio), d2 = parseDate(item.Termino);
-              if (d1 && d2) {
-                  currentYear = d1.getFullYear();
-                  const nameShort = shortenName(item.Medico);
-                  const color = `color: ${getHexColorForSetor(item.Setor)};`; 
-                  const tooltip = createCustomTooltip(nameShort, item.Setor, d1, d2);
-                  rows.push([nameShort, '', color, tooltip, d1, d2]);
-                  uniqueDoctors.add(nameShort);
-              }
-          });
-
-          if (rows.length === 0) return;
-          dataTable.addRows(rows);
-
-          const rowHeight = 45;
-          const chartHeight = Math.max(500, uniqueDoctors.size * rowHeight + 50);
-
-          const options = {
-              height: chartHeight,
-              timeline: { 
-                  rowLabelStyle: { fontName: 'Montserrat', fontSize: 12, color: '#333' }, 
-                  barLabelStyle: { fontName: 'Carlito', fontSize: 10 },
-                  groupByRowLabel: true 
-              },
-              tooltip: { isHtml: true }, 
-              hAxis: { format: 'MMMM', minValue: new Date(currentYear, 0, 1), maxValue: new Date(currentYear, 11, 31) }
-          };
-          chart.draw(dataTable, options);
-      }
-
       function parseDate(dateStr) { if(!dateStr) return null; const parts = dateStr.split('/'); if(parts.length !== 3) return null; return new Date(parts[2], parts[1]-1, parts[0]); }
       function handleError(err) { $('#loader').addClass('hidden'); $('#error-display').text("ERRO: " + err.message).show(); }
-      function initListView() {
-          const sets = { corpo: new Set(), esp: new Set(), sector: new Set() };
-          globalData.forEach(r => { if(r.Corpo) sets.corpo.add(r.Corpo); if(r.Especialidade && !IGNORED_SPECIALTIES.includes(r.Especialidade)) sets.esp.add(r.Especialidade); if(r.Setores) r.Setores.split(/,|\n/).forEach(s => sets.sector.add(s.trim())); });
-          if ($('#f-corpo').data('select2')) $('#f-corpo').select2('destroy'); if ($('#f-esp').data('select2')) $('#f-esp').select2('destroy'); if ($('#f-setores').data('select2')) $('#f-setores').select2('destroy');
-          $('#f-corpo, #f-esp, #f-setores').empty().append('<option></option>'); fillSelect('#f-corpo', sets.corpo); fillSelect('#f-esp', sets.esp); fillSelect('#f-setores', sets.sector);
-          $('#f-corpo, #f-esp, #f-setores').select2({ placeholder: "Todos", allowClear: true });
-          if ($.fn.DataTable.isDataTable('#medicosTable')) $('#medicosTable').DataTable().destroy();
-          dataTableInstance = $('#medicosTable').DataTable({
-              data: globalData, searching: false, ordering: false, paging: false, info: false, scrollY: "600px", scrollCollapse: true, language: { url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json" },
-              columns: [ { data: 'Ant', visible: false }, { data: 'Medico', width: "25%", render: (d, t, r) => { let subInfo = ""; const esp = r.Especialidade; if (esp && esp !== 'Generalista') { if (r.Residente === 'Sim') { const hosp = r.HospitalResidencia ? ` (${r.HospitalResidencia})` : ''; subInfo = `<span style="color: #d32f2f; font-weight:bold;">Residente ${esp}${hosp}</span>`; } else { subInfo = `<span style="color: #555;">${esp}</span>`; } } let setoresHtml = ''; if (r.Setores) { setoresHtml = `<div class="medico-sep"></div><div style="display: flex; flex-direction: column; gap: 2px;">${renderGroupedByColor(r.Setores, 'setor')}</div>`; } return `<div style="font-size: 1.2em; color: var(--primary-color); font-weight: 700;">${d}</div>${subInfo ? `<div style="font-size: 0.9em; margin-top: 2px;">${subInfo}</div>` : ''}${setoresHtml}`; } }, { data: 'Funcoes', width: "25%", render: d => renderGroupedByColor(d, 'funcao') }, { data: 'Horarios', width: "20%", render: d => renderHorariosList(d) }, { data: 'PlantaoSPA', width: "15%", render: d => renderHorariosList(d) }, { data: 'CH', width: "5%", render: (d, t, r) => { if (!d) return '-'; const chVal = parseInt(d); let classes = 'ch-cell'; if (chVal < 30 && r.Residente !== 'Sim') classes += ' ch-warning'; return `<div class="${classes}">${d}h</div>`; } }, { data: 'Corpo', visible: false }, { data: 'Residente', visible: false } ]
-          });
-          updateKPI(); 
-          $('#medicosTable tbody').on('click', 'tr', function () { const tr = $(this); const row = dataTableInstance.row(tr); if (row.data()) openModal(row.data()); });
-      }
-      function updateKPI() { if (!dataTableInstance) return; const count = dataTableInstance.rows({ search: 'applied' }).count(); $('#kpi-count').text(count); const corpo = $('#f-corpo').val(), esp = $('#f-esp').val(), setor = $('#f-setores').val(), res = $('#f-res-switch').is(':checked'); let label = "TOTAL DE MÉDICOS"; if (corpo) label = `MÉDICOS DO ${corpo}`; else if (esp) label = esp.toUpperCase(); else if (setor) label = setor.toUpperCase(); else if (res) label = "RESIDENTES"; $('#kpi-label').text(label); }
-      function populateWeeklyFilters() { const sets = { corpo: new Set(), esp: new Set(), sector: new Set() }; globalData.forEach(r => { if(r.Corpo) sets.corpo.add(r.Corpo); if(r.Especialidade && !IGNORED_SPECIALTIES.includes(r.Especialidade)) sets.esp.add(r.Especialidade); if(r.Setores) r.Setores.split(/,|\n/).forEach(s => sets.sector.add(s.trim())); }); fillSelect('#w-corpo', sets.corpo); fillSelect('#w-setores', sets.sector); fillSelect('#w-esp', sets.esp); $('#w-corpo, #w-setores, #w-esp').select2({ placeholder: "Todos", allowClear: true }); $('#w-setores').on('change', function(e) { const val = $(this).val(); if (val === 'SPA') { isSPAMode = true; $('#w-corpo').val(null).trigger('change.select2'); $('#w-esp').val(null).trigger('change.select2'); $('#spa-title').show(); } else { if(isSPAMode) { isSPAMode = false; $('#spa-title').hide(); } } renderWeeklyGrid(); }); $('#w-corpo, #w-esp').on('change', function() { const val = $(this).val(); if (isSPAMode && val) { isSPAMode = false; $('#spa-title').hide(); $('#w-setores').val(null).trigger('change.select2'); } renderWeeklyGrid(); }); }
+      
+      function populateWeeklyFilters() { const sets = { corpo: new Set(), esp: new Set(), sector: new Set() }; globalData.forEach(r => { if(r.Corpo) sets.corpo.add(r.Corpo); if(r.Especialidade && !IGNORED_SPECIALTIES.includes(r.Especialidade)) sets.esp.add(r.Especialidade); if(r.Setores) r.Setores.split(/,|\n/).forEach(s => sets.sector.add(s.trim())); }); fillSelect('#w-corpo', sets.corpo); fillSelect('#w-setores', sets.sector); fillSelect('#w-esp', sets.esp); $('#w-corpo, #w-setores, #w-esp').select2({ placeholder: "Todos", allowClear: true }); }
+      
       function renderWeeklyGrid() { const container = $('#grid-container'); container.empty(); if(isSPAMode) renderSPAGrid(container); else renderStandardGrid(container); }
+      
       function renderSPAGrid(container) { container.css('grid-template-columns', '100px repeat(7, 1fr)'); const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']; let html = '<div></div>'; dias.forEach(d => html += `<div class="grid-header">${d}</div>`); html += '<div class="grid-label label-dia">PLANTÃO DIURNO</div>'; const diasCodes = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab']; diasCodes.forEach(d => { html += `<div id="cell-${d}-dia" class="grid-cell cell-row-odd"></div>`; }); html += '<div class="grid-label label-noite">PLANTÃO NOTURNO</div>'; diasCodes.forEach(d => { html += `<div id="cell-${d}-noite" class="grid-cell cell-row-even"></div>`; }); container.html(html); try { globalData.forEach(doc => { if (doc.PlantaoSPA) { const shifts = (doc.PlantaoSPA||"").toLowerCase().split(/,|;|\n/); shifts.forEach(s => { const txt = s.trim(); let d = '', t = ''; if(txt.includes('segunda')) d='seg'; else if(txt.includes('terça')||txt.includes('terca')) d='ter'; else if(txt.includes('quarta')) d='qua'; else if(txt.includes('quinta')) d='qui'; else if(txt.includes('sexta')) d='sex'; else if(txt.includes('sábado')||txt.includes('sabado')) d='sab'; else if(txt.includes('domingo')) d='dom'; if(txt.includes('dia')) t='dia'; else if(txt.includes('noite')) t='noite'; if(d && t) { const cellId = `#cell-${d}-${t}`; const corClass = getCorpoBorderClass(doc.Corpo); $(cellId).append(`<div class="doc-card ${corClass}"><span class="doc-name">${doc.Medico}</span></div>`); } }); } }); } catch(e) { console.error(e); } }
-      function renderStandardGrid(container) { container.css('grid-template-columns', '100px repeat(5, 1fr)'); let html = `<div></div><div class="grid-header">Segunda</div><div class="grid-header">Terça</div><div class="grid-header">Quarta</div><div class="grid-header">Quinta</div><div class="grid-header">Sexta</div><div class="grid-label">MANHÃ</div><div id="cell-seg-manha" class="grid-cell cell-row-odd"></div><div id="cell-ter-manha" class="grid-cell cell-row-odd"></div><div id="cell-qua-manha" class="grid-cell cell-row-odd"></div><div id="cell-qui-manha" class="grid-cell cell-row-odd"></div><div id="cell-sex-manha" class="grid-cell cell-row-odd"></div><div class="grid-label">TARDE</div><div id="cell-seg-tarde" class="grid-cell cell-row-even"></div><div id="cell-ter-tarde" class="grid-cell cell-row-even"></div><div id="cell-qua-tarde" class="grid-cell cell-row-even"></div><div id="cell-qui-tarde" class="grid-cell cell-row-even"></div><div id="cell-sex-tarde" class="grid-cell cell-row-even"></div>`; container.html(html); const selCorpo=$('#w-corpo').val(), selSetores=$('#w-setores').val(), selEsp=$('#w-esp').val(), hasFilter=(selCorpo||selSetores||selEsp), isSpecialtyFilterActive=(selEsp!==null&&selEsp!==""); const assistenciaisList=['Ambulatório', 'Enfermaria', 'Cirurgias', 'NAIM', 'Radiologia', 'SPA']; try { globalData.forEach(doc => { if(selCorpo && doc.Corpo !== selCorpo) return; if(selEsp && doc.Especialidade !== selEsp) return; const slots = [{d:'seg', t:'manha'}, {d:'seg', t:'tarde'}, {d:'ter', t:'manha'}, {d:'ter', t:'tarde'}, {d:'qua', t:'manha'}, {d:'qua', t:'tarde'}, {d:'qui', t:'manha'}, {d:'qui', t:'tarde'}, {d:'sex', t:'manha'}, {d:'sex', t:'tarde'}]; slots.forEach(slot => { let sectorList = getSectorList(doc, slot.d, slot.t); if((!sectorList || sectorList.length===0) && hasWorkShift(doc.Horarios, slot.d, slot.t)) { const s=doc.Setores?doc.Setores.split(/,|\n/)[0].trim():''; if(s) sectorList=[s]; } if(sectorList && sectorList.length>0) { if(isSpecialtyFilterActive) { sectorList=sectorList.filter(s=>assistenciaisList.includes(s)); if(sectorList.length===0) return; } if(selSetores && !sectorList.includes(selSetores)) return; const cellId = `#cell-${slot.d}-${slot.t}`; const corClass = getCorpoBorderClass(doc.Corpo); let detailHtml = ''; if (selSetores) { if (selSetores === 'Ambulatório' || selSetores === 'Cirurgias') { if (doc.Especialidade && doc.Especialidade !== 'Generalista') { detailHtml = `<span class="doc-detail">${doc.Especialidade}</span>`; } } } else if (selCorpo || selEsp) { if (sectorList && sectorList.length > 0) { const txt = sectorList.join(' | '); detailHtml = `<span class="doc-detail">${txt}</span>`; } } $(cellId).append(`<div class="doc-card ${corClass}"><span class="doc-name">${doc.Medico}</span>${detailHtml}</div>`); } }); }); } catch(e) { console.error(e); } }
+      
+      function renderStandardGrid(container) { 
+          container.css('grid-template-columns', '100px repeat(5, 1fr)'); 
+          let html = `<div></div><div class="grid-header">Segunda</div><div class="grid-header">Terça</div><div class="grid-header">Quarta</div><div class="grid-header">Quinta</div><div class="grid-header">Sexta</div><div class="grid-label">MANHÃ</div><div id="cell-seg-manha" class="grid-cell cell-row-odd"></div><div id="cell-ter-manha" class="grid-cell cell-row-odd"></div><div id="cell-qua-manha" class="grid-cell cell-row-odd"></div><div id="cell-qui-manha" class="grid-cell cell-row-odd"></div><div id="cell-sex-manha" class="grid-cell cell-row-odd"></div><div class="grid-label">TARDE</div><div id="cell-seg-tarde" class="grid-cell cell-row-even"></div><div id="cell-ter-tarde" class="grid-cell cell-row-even"></div><div id="cell-qua-tarde" class="grid-cell cell-row-even"></div><div id="cell-qui-tarde" class="grid-cell cell-row-even"></div><div id="cell-sex-tarde" class="grid-cell cell-row-even"></div>`; 
+          container.html(html); 
+          
+          const selCorpo = $('#w-corpo').val(); 
+          const selSetores = $('#w-setores').val(); 
+          const selEsp = $('#w-esp').val(); 
+          
+          // Lista de setores que são geridos estritamente pela aba ESPECIALISTAS
+          const strictSectors = ['Ambulatório', 'CAAPIOSE', 'Cirurgias', 'Enfermaria', 'JRS', 'NAIM', 'Radiologia', 'Regulação', 'SMI'];
+
+          // Dicionário para acumular o HTML de cada célula antes de injetar no DOM (Performance Fix)
+          const cellBuffers = {};
+          const slots = [
+              {d:'seg', t:'manha'}, {d:'seg', t:'tarde'}, 
+              {d:'ter', t:'manha'}, {d:'ter', t:'tarde'}, 
+              {d:'qua', t:'manha'}, {d:'qua', t:'tarde'}, 
+              {d:'qui', t:'manha'}, {d:'qui', t:'tarde'}, 
+              {d:'sex', t:'manha'}, {d:'sex', t:'tarde'}
+          ];
+          
+          // Inicializa os buffers
+          slots.forEach(s => cellBuffers[`#cell-${s.d}-${s.t}`] = "");
+
+          try { 
+              globalData.forEach(doc => { 
+                  // Filtro Corpo (Array)
+                  if (selCorpo && selCorpo.length > 0 && !selCorpo.includes(doc.Corpo)) return;
+                  
+                  // Filtro Especialidade (Array)
+                  if (selEsp && selEsp.length > 0 && !selEsp.includes(doc.Especialidade)) return;
+                  
+                  const hasSpecificScale = doc.EscalaEspecifica && Object.keys(doc.EscalaEspecifica).length > 0;
+                  
+                  // LOGICA DE RENOVAÇÃO (BAIXA) - COMPARTILHADA
+                  const renovacao = (doc.Renovacao || '').toLowerCase().trim();
+                  let cardStyleClass = '';
+                  let displayName = doc.Medico;
+
+                  if (renovacao === 'não' || renovacao === 'nao' || renovacao === 'talvez') {
+                      cardStyleClass = 'card-baixa';
+                      displayName = `<span style="text-decoration: line-through;">${doc.Medico}</span>`;
+                  }
+
+                  slots.forEach(slot => { 
+                      let sectorList = getSectorList(doc, slot.d, slot.t); 
+                      
+                      // Lógica de Fallback
+                      if ((!sectorList || sectorList.length === 0) && hasWorkShift(doc.Horarios, slot.d, slot.t)) { 
+                          const s = doc.Setores ? doc.Setores.split(/,|\n/)[0].trim() : ''; 
+                          if (s) {
+                              if (hasSpecificScale && strictSectors.includes(s)) {
+                                  // Não adiciona nada
+                              } else {
+                                  sectorList = [s]; 
+                              }
+                          }
+                      } 
+                      
+                      if (sectorList && sectorList.length > 0) { 
+                          // Filtro Setores (Array)
+                          if (selSetores && selSetores.length > 0) {
+                              const hasOverlap = sectorList.some(sector => selSetores.includes(sector));
+                              if (!hasOverlap) return;
+                          }
+
+                          // LOGICA DE FILTRO POR ESPECIALIDADE
+                          if (selEsp && selEsp.length > 0) {
+                              const allowedSpecSectors = ['Ambulatório', 'Cirurgias', 'Enfermaria', 'NAIM', 'Radiologia'];
+                              const hasAllowed = sectorList.some(s => allowedSpecSectors.includes(s));
+                              if (!hasAllowed) return;
+                          }
+
+                          const cellId = `#cell-${slot.d}-${slot.t}`; 
+                          const corClass = getCorpoBorderClass(doc.Corpo); 
+                          let detailHtml = ''; 
+                          
+                          // Detalhes no Card
+                          if (selSetores && selSetores.length > 0) { 
+                              if (selSetores.includes('Ambulatório') || selSetores.includes('Cirurgias')) { 
+                                  if (doc.Especialidade && doc.Especialidade !== 'Generalista') { 
+                                      detailHtml = `<span class="doc-detail">${doc.Especialidade}</span>`; 
+                                  } 
+                              } 
+                          } else if ((selCorpo && selCorpo.length > 0) || (selEsp && selEsp.length > 0)) { 
+                              if (sectorList && sectorList.length > 0) { 
+                                  const txt = sectorList.join(' | '); 
+                                  detailHtml = `<span class="doc-detail">${txt}</span>`; 
+                              } 
+                          } 
+                          
+                          // Acumula no buffer em vez de inserir diretamente no DOM
+                          if (cellBuffers[cellId] !== undefined) {
+                              cellBuffers[cellId] += `<div class="doc-card ${corClass} ${cardStyleClass}"><span class="doc-name">${displayName}</span>${detailHtml}</div>`;
+                          }
+                      } 
+                  }); 
+              }); 
+              
+              // Renderiza tudo de uma vez
+              Object.keys(cellBuffers).forEach(key => {
+                  $(key).html(cellBuffers[key]);
+              });
+
+          } catch(e) { console.error(e); } 
+      }
       function hasWorkShift(horariosStr, diaCode, turnoCode) { if (!horariosStr) return false; let norm=(horariosStr||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/feira/g, "").replace(/\(.*\)/g, "").replace(/[-;.\n\r]/g, ","); const slots=norm.split(",").map(s=>s.trim()).filter(s=>s.length>0); const diaMap={'seg':['segunda','2a','2ª'],'ter':['terca','3a','3ª'],'qua':['quarta','4a','4ª'],'qui':['quinta','5a','5ª'],'sex':['sexta','6a','6ª'],'sab':['sabado','sb'],'dom':['domingo','dm']}; const turnoMap={'manha':['manha','mnh','man','dia'],'tarde':['tarde','trd','tar','dia'],'dia':['dia'],'noite':['noite']}; const diasTarget=diaMap[diaCode]||[], turnosTarget=turnoMap[turnoCode]||[]; return slots.some(slot=>{ const hasDia=diasTarget.some(d=>slot.includes(d)), hasTurno=turnosTarget.some(t=>slot.includes(t)); return hasDia && hasTurno; }); }
       function getDiaFull(code) { const map={seg:'segunda',ter:'terça',qua:'quarta',qui:'quinta',sex:'sexta'}; return map[code]||''; }
       function getTurnoFull(code) { return code==='manha'?'manhã':'tarde'; }
@@ -751,9 +1134,8 @@
       function getCorpoBorderClass(c) { if(!c)return 'border-cinza'; c=c.toUpperCase(); if(c.includes('CSM'))return 'border-vermelho'; if(c.includes('SMV'))return 'border-amarelo'; if(c.includes('SMO'))return 'border-verde'; return 'border-cinza'; }
       function updateModalField(id, value) { const el = $(id); const parent = el.closest('.info-item, .contact-item, .contact-sep'); if (value && value.trim() !== '' && value !== '-') { el.text(value); if (parent.length) parent.show(); } else { if (parent.length) parent.hide(); } }
       function openModal(data) {
-          const rawName = data.Medico || 'Sem Nome'; const nip = data.NIP || ''; let title = rawName;
-          if (nip && rawName.includes(' ')) { const parts = rawName.split(' '); const rank = parts[0]; const rest = parts.slice(1).join(' '); title = `${rank} ${nip} ${rest}`; }
-          $('#modal-nome').text(title);
+          const rawName = data.Medico || 'Sem Nome';
+          $('#modal-nome').text(rawName);
           let sub = data.NomeCompleto || data.Medico; if(data.Idade) sub += `, ${data.Idade}`; $('#modal-sub').text(sub);
           const imgUrl = (data.Imagem && data.Imagem.trim() !== "") ? data.Imagem : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; $('#modal-img').attr('src', imgUrl);
           let specText = data.Especialidade || '-'; if(specText === 'Generalista') specText = ""; 
@@ -763,6 +1145,39 @@
           const hasEmail = data.Email && data.Email.trim() !== '' && data.Email !== '-'; const hasCel = data.Celular && data.Celular.trim() !== '' && data.Celular !== '-'; if (hasEmail && hasCel) $('#contact-sep').show(); else $('#contact-sep').hide();
           updateModalField('#modal-nip', data.NIP); updateModalField('#modal-cpf', data.CPF); updateModalField('#modal-nasc', data.Nascimento); updateModalField('#modal-rg', data.Identidade);
           updateModalField('#modal-crm', data.CRM); updateModalField('#modal-rqe', data.RQE); updateModalField('#modal-inc', data.Incorporacao);
+          
+          // Lógica para SETORES
+          const sList = (data.Setores || '').split(/,|\n|;/).map(s => s.trim()).filter(s => s);
+          const sContainer = $('#modal-setores-content');
+          sContainer.empty();
+
+          if (sList.length > 0) {
+              sList.forEach(s => {
+                  sContainer.append(`<span class="k-chip sector" style="font-size: 0.8em; padding: 5px 12px; margin-bottom: 4px;">${s}</span>`);
+              });
+              $('#sec-setores').show();
+              $('#grid-setores').show();
+          } else {
+              $('#sec-setores').hide();
+              $('#grid-setores').hide();
+          }
+
+          // Lógica para FUNÇÕES
+          const fList = (data.Funcoes || '').split(/,|\n|;/).map(s => s.trim()).filter(s => s);
+          const fContainer = $('#modal-funcoes-content');
+          fContainer.empty();
+
+          if (fList.length > 0) {
+              fList.forEach(f => {
+                  fContainer.append(`<span class="k-chip function" style="font-size: 0.8em; padding: 5px 12px; margin-bottom: 4px;">${f}</span>`);
+              });
+              $('#sec-funcoes').show();
+              $('#grid-funcoes').show();
+          } else {
+              $('#sec-funcoes').hide();
+              $('#grid-funcoes').hide();
+          }
+
           $('#modal-ch').text(data.CH ? `${data.CH}h` : '-');
           fillModalSchedule(data.Horarios, data.PlantaoSPA);
           $('#medicoModal').css('display', 'flex'); setTimeout(()=>$('#medicoModal').addClass('active'), 10);
