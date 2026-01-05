@@ -108,4 +108,81 @@
 - **2T (RM2-Md) CAMELO:** Quinta manha e Quinta tarde  
 - **2T (RM2-Md) CARVALHO:** Quinta manha e Quinta tarde
 - **2T (RM2-Md) ARRUDA:** Sexta manha e Sexta tarde 
-- **2T (RM2-Md) OLIVEIRA:** Sexta manha e Sexta tarde 
+- **2T (RM2-Md) OLIVEIRA:** Sexta manha e Sexta tarde
+
+
+
+
+
+   ---
+
+
+
+  # Atribua as cores Cinza, Amarelo e Vermelho para os chips de 'SETORES' e 'FUNÇÕES':
+
+## 'SETORES':
+
+| Ambulatório | Amarelo |
+| :---- | :---- |
+| Auditoria | Vermelho |
+| Radiologia | Amarelo |
+| CAAPIOSE | Vermelho |
+| Cirurgias | Amarelo |
+| Enfermaria | Amarelo |
+| JRS | Vermelho |
+| Regulação | Amarelo |
+| NAIM | Amarelo |
+| SIAD | Cinza |
+| SMI | Cinza |
+| EAMPE | Vermelho |
+| Guias | Cinza |
+
+## 'FUNÇÕES':
+
+| Coordenação DANTS | Amarelo |
+| :---- | :---- |
+| Coordenação PSM Atenção às Doenças Profissionais | Cinza |
+| Coordenação PSM Atenção Farmacêutca | Cinza |
+| Coordenação PSM Dermatologia | Cinza |
+| Coordenação PSM DM | Cinza |
+| Coordenação PSM DST/AIDS | Cinza |
+| Coordenação PSM HAS | Cinza |
+| Coordenação PSM Imunizações | Cinza |
+| Coordenação PSM Pneumologia | Cinza |
+| Coordenação PSM Reabilitação | Cinza |
+| Coordenação PSM Saúde da Mulher | Cinza |
+| Coordenação PSM Saúde do Homem | Cinza |
+| Coordenação PSM Saúde Mental | Cinza |
+| Encarregada NAIM | Vermelho |
+| Encarregada Seção Medicina Clínica | Amarelo |
+| Encarregada SPA | Amarelo |
+| Encarregado Oftalmologia | Amarelo |
+| Encarregado Ortopedia e Traumatologia | Amarelo |
+| Encarregado Radiologia | Vermelho |
+| Encarregado SIAD | Vermelho |
+| Encarregado Seção de Medicina Cirúrgica | Amarelo |
+| Encarregado SECOM | Vermelho |
+| Encarregado Serviço de Medicina Operativa | Cinza |
+| Encarregado SMI | Vermelho |
+| Escalante | Amarelo |
+| Membro CCIH | Amarelo |
+| Membro CIPA | Cinza |
+| Membro Comissão de Farmácia e Terapêutica | Cinza |
+| Membro da Comissão de Ética | Cinza |
+| Membro da Comissão de Humanização | Cinza |
+| Membro da Comissão de Óbitos | Amarelo |
+| Membro da Comissão de Prontuários | Amarelo |
+| Membro da JEIM | Amarelo |
+| Membro do Núcleo de Segurança do Paciente | Cinza |
+| Membro JRS | Amarelo |
+| Presidente CAAPIOSE | Vermelho |
+| Presidente CCIH | Vermelho |
+| Vice-Presidente CIPA | Cinza |
+| Presidente Comissão de Farmácia e Terapêutica | Vermelho |
+| Presidente da Comissão de Óbitos | Amarela |
+| Presidente da Comissão de Prontuários | Amarela |
+| Presidente JRS | Vermelho |
+| Responsável Licitação | Amarelo |
+| Supervisão Enfermaria | Amarelo |
+| Supervisão PSM | Amarelo |
+| Supervisão SMI | Amarelo |
