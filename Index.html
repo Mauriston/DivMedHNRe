@@ -461,10 +461,10 @@
         <div class="filter-bar">
             <div class="page-title">DETALHE SEMANAL</div>
             <div class="filter-container-right">
-                <!-- MULTIPLE SELECT PARA A VISTA SEMANAL TAMBÉM -->
-                <div class="filter-mini-item"><label>Corpo</label><select id="w-corpo" multiple="multiple" style="width:100%"><option></option></select></div>
-                <div class="filter-mini-item"><label>Setores</label><select id="w-setores" multiple="multiple" style="width:100%"><option></option></select></div>
-                <div class="filter-mini-item"><label>Especialidade</label><select id="w-esp" multiple="multiple" style="width:100%"><option></option></select></div>
+                <!-- SINGLE SELECT: Atributo 'multiple' removido -->
+                <div class="filter-mini-item"><label>Corpo</label><select id="w-corpo" style="width:100%"><option></option></select></div>
+                <div class="filter-mini-item"><label>Setores</label><select id="w-setores" style="width:100%"><option></option></select></div>
+                <div class="filter-mini-item"><label>Especialidade</label><select id="w-esp" style="width:100%"><option></option></select></div>
             </div>
         </div>
         
@@ -473,9 +473,9 @@
         <div id="grid-container" class="weekly-grid"></div>
     </div>
 
+    <!-- VIEW FÉRIAS -->
     <div id="view-ferias" class="hidden" style="height: calc(100vh - 120px);">
-        <!-- IFRAME FÉRIAS -->
-        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRApDh10OBdzMKjGR47ei7o_47w6Rc0q1TapqYkqRK4ioa9Xcyvj8nz6Pyu8OVZrNZPSt_5Y6qsU1vO/pubhtml?gid=1418395800&amp;single=true&amp;widget=true&amp;headers=false" style="width:100%; height:100%; border:none;"></iframe>
+        <iframe src="https://lookerstudio.google.com/embed/reporting/93adda3d-b135-48b3-ab69-58af5f5bcc26/page/page_12345" style="width:100%; height:100%; border:none;" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
     </div>
 
     <div id="view-dashboard" class="hidden">
@@ -612,8 +612,15 @@
       const processWeeklyGrid = debounce(() => renderWeeklyGrid(), 300);
 
       $(document).ready(function() {
-          $('.filter-mini-item select').attr('multiple', 'multiple').select2({ placeholder: "Todos", allowClear: true, closeOnSelect: false });
+          // Selects 'multiple' para a lista kanban
+          $('.filter-mini-item select').not('#w-corpo, #w-setores, #w-esp').attr('multiple', 'multiple').select2({ placeholder: "Todos", allowClear: true, closeOnSelect: false });
           
+          // Selects 'single' para a visualização semanal (SIMPLIFICADO)
+          $('#w-corpo, #w-setores, #w-esp').select2({
+              placeholder: "Todos",
+              allowClear: true
+          });
+
           // INICIALIZAR O FILTRO KANBAN
           $('#f-setor-kanban').attr('multiple', 'multiple').select2({
               placeholder: "Selecione Setores...",
@@ -635,8 +642,8 @@
           // FILTROS SEMANAIS (TÍTULO DINAMICO)
           $('#w-setores').on('change', function(e) { 
               const val = $(this).val(); 
-              // Se val for array, pega o primeiro para titulo, ou ajusta lógica
-              const firstVal = (val && val.length > 0) ? val[0] : null;
+              // Se val for string (seleção única), usamos diretamente
+              const firstVal = val;
               updateWeeklyTitle(firstVal); 
               
               if (val && val.includes('SPA')) { 
@@ -1011,6 +1018,73 @@
           return `<div class="tooltip-box"><div class="tooltip-title">${name}</div><div class="tooltip-row"><span class="tooltip-label">Setor:</span> ${setor}</div><div class="tooltip-row"><span class="tooltip-label">Início:</span> ${s1}</div><div class="tooltip-row"><span class="tooltip-label">Fim:</span> ${s2}</div></div>`;
       }
 
+      function drawFeriasChart() {
+          if (!chartLibReady || !globalFeriasData || globalFeriasData.length === 0) return;
+          
+          const container = document.getElementById('timeline-chart');
+          const chart = new google.visualization.Timeline(container);
+          const dataTable = new google.visualization.DataTable();
+
+          dataTable.addColumn({ type: 'string', id: 'Médico' }); 
+          dataTable.addColumn({ type: 'string', id: 'Info' });   
+          dataTable.addColumn({ type: 'string', role: 'style' }); 
+          dataTable.addColumn({ type: 'string', role: 'tooltip', 'p': {'html': true} });
+          dataTable.addColumn({ type: 'date', id: 'Start' });
+          dataTable.addColumn({ type: 'date', id: 'End' });
+
+          const fCorpo = $('#fer-corpo').val(), fSetor = $('#fer-setor').val();
+          let filteredRows = globalFeriasData.filter(item => {
+              if (fCorpo && item.Corpo !== fCorpo) return false;
+              if (fSetor && item.Setor !== fSetor) return false;
+              return true;
+          });
+
+          if (filteredRows.length === 0) { container.innerHTML = '<div style="text-align:center; padding:50px;">Nenhum registro encontrado.</div>'; return; }
+
+          const order = { 'CSM': 1, 'SMV': 2, 'SMO': 3 };
+          filteredRows.sort((a, b) => {
+              const diffCorpo = (order[a.Corpo] || 99) - (order[b.Corpo] || 99);
+              if(diffCorpo !== 0) return diffCorpo;
+              const antA = doctorAntMap[a.Medico] || 9999;
+              const antB = doctorAntMap[b.Medico] || 9999;
+              return antA - antB; 
+          });
+
+          const rows = [];
+          const uniqueDoctors = new Set();
+          let currentYear = new Date().getFullYear();
+
+          filteredRows.forEach(item => {
+              const d1 = parseDate(item.Inicio), d2 = parseDate(item.Termino);
+              if (d1 && d2) {
+                  currentYear = d1.getFullYear();
+                  const nameShort = shortenName(item.Medico);
+                  const color = `color: ${getHexColorForSetor(item.Setor)};`; 
+                  const tooltip = createCustomTooltip(nameShort, item.Setor, d1, d2);
+                  rows.push([nameShort, '', color, tooltip, d1, d2]);
+                  uniqueDoctors.add(nameShort);
+              }
+          });
+
+          if (rows.length === 0) return;
+          dataTable.addRows(rows);
+
+          const rowHeight = 45;
+          const chartHeight = Math.max(500, uniqueDoctors.size * rowHeight + 50);
+
+          const options = {
+              height: chartHeight,
+              timeline: { 
+                  rowLabelStyle: { fontName: 'Montserrat', fontSize: 12, color: '#333' }, 
+                  barLabelStyle: { fontName: 'Carlito', fontSize: 10 },
+                  groupByRowLabel: true 
+              },
+              tooltip: { isHtml: true }, 
+              hAxis: { format: 'MMMM', minValue: new Date(currentYear, 0, 1), maxValue: new Date(currentYear, 11, 31) }
+          };
+          chart.draw(dataTable, options);
+      }
+
       function parseDate(dateStr) { if(!dateStr) return null; const parts = dateStr.split('/'); if(parts.length !== 3) return null; return new Date(parts[2], parts[1]-1, parts[0]); }
       function handleError(err) { $('#loader').addClass('hidden'); $('#error-display').text("ERRO: " + err.message).show(); }
       
@@ -1018,7 +1092,54 @@
       
       function renderWeeklyGrid() { const container = $('#grid-container'); container.empty(); if(isSPAMode) renderSPAGrid(container); else renderStandardGrid(container); }
       
-      function renderSPAGrid(container) { container.css('grid-template-columns', '100px repeat(7, 1fr)'); const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']; let html = '<div></div>'; dias.forEach(d => html += `<div class="grid-header">${d}</div>`); html += '<div class="grid-label label-dia">PLANTÃO DIURNO</div>'; const diasCodes = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab']; diasCodes.forEach(d => { html += `<div id="cell-${d}-dia" class="grid-cell cell-row-odd"></div>`; }); html += '<div class="grid-label label-noite">PLANTÃO NOTURNO</div>'; diasCodes.forEach(d => { html += `<div id="cell-${d}-noite" class="grid-cell cell-row-even"></div>`; }); container.html(html); try { globalData.forEach(doc => { if (doc.PlantaoSPA) { const shifts = (doc.PlantaoSPA||"").toLowerCase().split(/,|;|\n/); shifts.forEach(s => { const txt = s.trim(); let d = '', t = ''; if(txt.includes('segunda')) d='seg'; else if(txt.includes('terça')||txt.includes('terca')) d='ter'; else if(txt.includes('quarta')) d='qua'; else if(txt.includes('quinta')) d='qui'; else if(txt.includes('sexta')) d='sex'; else if(txt.includes('sábado')||txt.includes('sabado')) d='sab'; else if(txt.includes('domingo')) d='dom'; if(txt.includes('dia')) t='dia'; else if(txt.includes('noite')) t='noite'; if(d && t) { const cellId = `#cell-${d}-${t}`; const corClass = getCorpoBorderClass(doc.Corpo); $(cellId).append(`<div class="doc-card ${corClass}"><span class="doc-name">${doc.Medico}</span></div>`); } }); } }); } catch(e) { console.error(e); } }
+      function renderSPAGrid(container) { 
+          container.css('grid-template-columns', '100px repeat(7, 1fr)'); 
+          const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']; 
+          let html = '<div></div>'; 
+          dias.forEach(d => html += `<div class="grid-header">${d}</div>`); 
+          html += '<div class="grid-label label-dia">PLANTÃO DIURNO</div>'; 
+          const diasCodes = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab']; 
+          diasCodes.forEach(d => { html += `<div id="cell-${d}-dia" class="grid-cell cell-row-odd"></div>`; }); 
+          html += '<div class="grid-label label-noite">PLANTÃO NOTURNO</div>'; 
+          diasCodes.forEach(d => { html += `<div id="cell-${d}-noite" class="grid-cell cell-row-even"></div>`; }); 
+          container.html(html); 
+          
+          try { 
+              globalData.forEach(doc => { 
+                  if (doc.PlantaoSPA) { 
+                       // LOGICA DE RENOVAÇÃO (BAIXA) - INCLUÍDA
+                      const renovacao = (doc.Renovacao || '').toLowerCase().trim();
+                      let cardStyleClass = '';
+                      let displayName = doc.Medico;
+
+                      if (renovacao === 'não' || renovacao === 'nao' || renovacao === 'talvez') {
+                          cardStyleClass = 'card-baixa';
+                          displayName = `<span style="text-decoration: line-through;">${doc.Medico}</span>`;
+                      }
+
+                      const shifts = (doc.PlantaoSPA||"").toLowerCase().split(/,|;|\n/); 
+                      shifts.forEach(s => { 
+                          const txt = s.trim(); 
+                          let d = '', t = ''; 
+                          if(txt.includes('segunda')) d='seg'; 
+                          else if(txt.includes('terça')||txt.includes('terca')) d='ter'; 
+                          else if(txt.includes('quarta')) d='qua'; 
+                          else if(txt.includes('quinta')) d='qui'; 
+                          else if(txt.includes('sexta')) d='sex'; 
+                          else if(txt.includes('sábado')||txt.includes('sabado')) d='sab'; 
+                          else if(txt.includes('domingo')) d='dom'; 
+                          if(txt.includes('dia')) t='dia'; 
+                          else if(txt.includes('noite')) t='noite'; 
+                          if(d && t) { 
+                              const cellId = `#cell-${d}-${t}`; 
+                              const corClass = getCorpoBorderClass(doc.Corpo); 
+                              $(cellId).append(`<div class="doc-card ${corClass} ${cardStyleClass}"><span class="doc-name">${displayName}</span></div>`); 
+                          } 
+                      }); 
+                  } 
+              }); 
+          } catch(e) { console.error(e); } 
+      }
       
       function renderStandardGrid(container) { 
           container.css('grid-template-columns', '100px repeat(5, 1fr)'); 
@@ -1047,11 +1168,11 @@
 
           try { 
               globalData.forEach(doc => { 
-                  // Filtro Corpo (Array)
-                  if (selCorpo && selCorpo.length > 0 && !selCorpo.includes(doc.Corpo)) return;
+                  // Filtro Corpo (String - Seleção Única)
+                  if (selCorpo && selCorpo !== doc.Corpo) return;
                   
-                  // Filtro Especialidade (Array)
-                  if (selEsp && selEsp.length > 0 && !selEsp.includes(doc.Especialidade)) return;
+                  // Filtro Especialidade (String - Seleção Única)
+                  if (selEsp && selEsp !== doc.Especialidade) return;
                   
                   const hasSpecificScale = doc.EscalaEspecifica && Object.keys(doc.EscalaEspecifica).length > 0;
                   
@@ -1081,14 +1202,14 @@
                       } 
                       
                       if (sectorList && sectorList.length > 0) { 
-                          // Filtro Setores (Array)
-                          if (selSetores && selSetores.length > 0) {
-                              const hasOverlap = sectorList.some(sector => selSetores.includes(sector));
-                              if (!hasOverlap) return;
+                          // Filtro Setores (String - Seleção Única)
+                          if (selSetores) {
+                              // Se o filtro estiver ativo, o setor do médico para este horário DEVE ser igual ao selecionado
+                              if (!sectorList.includes(selSetores)) return;
                           }
 
                           // LOGICA DE FILTRO POR ESPECIALIDADE
-                          if (selEsp && selEsp.length > 0) {
+                          if (selEsp) {
                               const allowedSpecSectors = ['Ambulatório', 'Cirurgias', 'Enfermaria', 'NAIM', 'Radiologia'];
                               const hasAllowed = sectorList.some(s => allowedSpecSectors.includes(s));
                               if (!hasAllowed) return;
@@ -1099,13 +1220,13 @@
                           let detailHtml = ''; 
                           
                           // Detalhes no Card
-                          if (selSetores && selSetores.length > 0) { 
-                              if (selSetores.includes('Ambulatório') || selSetores.includes('Cirurgias')) { 
+                          if (selSetores) { 
+                              if (selSetores === 'Ambulatório' || selSetores === 'Cirurgias') { 
                                   if (doc.Especialidade && doc.Especialidade !== 'Generalista') { 
                                       detailHtml = `<span class="doc-detail">${doc.Especialidade}</span>`; 
                                   } 
                               } 
-                          } else if ((selCorpo && selCorpo.length > 0) || (selEsp && selEsp.length > 0)) { 
+                          } else if (selCorpo || selEsp) { 
                               if (sectorList && sectorList.length > 0) { 
                                   const txt = sectorList.join(' | '); 
                                   detailHtml = `<span class="doc-detail">${txt}</span>`; 
