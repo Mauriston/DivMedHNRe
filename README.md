@@ -190,15 +190,7 @@ Uma janela de sobreposição detalhada.
 
 ---
 
-# PROMPT DISTRIBUIÇÃO SEMANAL DE HORÁRIOS  
-
-
-
-
-
-
-
- ## AJUSTES NA LÓGICA DE DISTRUBUIÇÃO SEMANAL:
+# AJUSTES NA LÓGICA DE DISTRUBUIÇÃO SEMANAL:
 
 ### 'JRS':
 - **1T (Md) LUZ:**
